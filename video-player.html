@@ -3,139 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terabox Content Player</title>
+    <title>Terabox Media Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --text: #212529;
+            --bg-light: #f8f9fa;
+        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1c20;
-            color: #e0e0e0;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 20px; /* Add some padding around */
+            background-color: var(--bg-light);
+            color: var(--text);
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Align to top */
+            justify-content: center;
             min-height: 100vh;
+            padding: 20px;
             box-sizing: border-box;
-        }
-        .title-bar {
-            width: 100%;
-            max-width: 800px; /* Match player max-width */
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .title-bar h1 {
-            color: #58a6ff;
-            font-size: 1.8em;
-            margin: 0;
         }
         .player-wrapper {
             width: 100%;
-            max-width: 800px; /* Or your preferred max width */
-            background-color: #000;
-            border-radius: 8px;
+            max-width: 1000px; /* Max width for the player */
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .player-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        .player-header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .player-content {
+            padding: 20px;
+        }
+        .file-info {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .file-info h2 {
+            font-size: 1.2rem;
+            color: var(--text);
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .file-info p {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 0;
+            word-break: break-all;
+        }
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            /* Aspect ratio for video player, e.g., 16:9 */
+            padding-top: 56.25%; /* (9 / 16 * 100) */
+            background-color: #000; /* Black background for player */
+            border-radius: 5px;
+            overflow: hidden;
         }
         #teraboxPlayer {
-            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            aspect-ratio: 16 / 9; /* Common video aspect ratio, adjust if needed */
+            height: 100%;
             border: none;
         }
-        .status-message {
-            margin-top: 20px;
-            font-size: 1.1em;
-            text-align: center;
-            width: 100%;
-            max-width: 800px;
-        }
         .controls {
+            margin-top: 25px;
             text-align: center;
-            margin-top: 30px; /* Increased margin */
         }
-        .controls a {
-            color: #58a6ff;
+        .back-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: white;
             text-decoration: none;
-            padding: 10px 20px;
-            background-color: #22252a;
             border-radius: 5px;
-            border: 1px solid #303338;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
-        .controls a:hover {
-            background-color: #58a6ff;
-            color: #1a1c20;
+        .back-button:hover {
+            background-color: var(--secondary);
         }
-         @media (max-width: 600px) {
-            .title-bar h1 { font-size: 1.5em; }
-            .player-wrapper { width: 100%; } /* Use full width on smaller screens */
-            body { padding: 10px; }
+        .loading-message {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--primary);
+            padding: 30px;
         }
     </style>
 </head>
 <body>
-    <div class="title-bar">
-        <h1>Content Player</h1>
-    </div>
+    <div class="player-wrapper">
+        <div class="player-header">
+            <h1>TeraBox Media Player</h1>
+        </div>
+        <div class="player-content">
+            <div class="file-info">
+                <h2>File Information:</h2>
+                <p id="fileUrlDisplay">URL: Loading...</p>
+                <p id="fileNameDisplay">Name: Attempting to determine...</p>
+            </div>
 
-    <div class="player-wrapper" id="playerWrapper" style="display: none;">
-        <iframe
-            id="teraboxPlayer"
-            allowfullscreen
-            allow="autoplay; encrypted-media;" <!-- Recommended allow attributes for media -->
-            sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-presentation" <!-- Consider sandbox for security -->
-            >
-            <!-- src will be set by JS -->
-        </iframe>
-    </div>
-
-    <div id="statusMessage" class="status-message">Loading player...</div>
-
-    <div class="controls">
-        <a href="index.html">Go Back to Homepage</a>
+            <div id="playerContainer" class="iframe-container" style="display: none;">
+                <iframe id="teraboxPlayer" allowfullscreen></iframe>
+            </div>
+            <p id="loadingMessage" class="loading-message">Loading player...</p>
+            
+            <div class="controls">
+                <button id="backButton" class="back-button">Back to Home</button>
+            </div>
+        </div>
     </div>
 
     <script>
-      (function () {
-        const qParam = new URLSearchParams(window.location.search).get('q');
-        const iframe = document.getElementById('teraboxPlayer');
-        const statusMessage = document.getElementById('statusMessage');
-        const playerWrapper = document.getElementById('playerWrapper');
+        document.addEventListener('DOMContentLoaded', () => {
+            const qParam = new URLSearchParams(window.location.search).get('q');
+            const iframe = document.getElementById('teraboxPlayer');
+            const playerContainer = document.getElementById('playerContainer');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const fileUrlDisplay = document.getElementById('fileUrlDisplay');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const backButton = document.getElementById('backButton');
 
-        if (qParam) {
-          try {
-            // qParam should be the already URI-encoded Terabox URL.
-            // The player service (teraboxfast.com) will decode it.
-            const playerSrc = 'https://player.teraboxfast.com/terabox?q=' + qParam;
-            
-            statusMessage.textContent = 'Loading player... Please wait.';
-            playerWrapper.style.display = 'block'; // Show wrapper
-            iframe.src = playerSrc;
+            if (qParam) {
+                const decodedQParam = decodeURIComponent(qParam);
+                fileUrlDisplay.textContent = `URL: ${decodedQParam}`;
 
-            iframe.onload = function() {
-                statusMessage.textContent = 'Player loaded. If content does not start, check the link or try again.';
-                // You might want to hide the status message after successful load,
-                // or change it to something like "Enjoy your content!"
-                // setTimeout(() => { statusMessage.style.display = 'none'; }, 3000);
-            };
-            iframe.onerror = function() {
-                playerWrapper.style.display = 'none'; // Hide iframe wrapper on error
-                statusMessage.textContent = 'Error: Could not load content in the player. The link might be invalid, expired, private, or the player service may be unavailable or does not support this content type.';
-            };
+                try {
+                    const urlObj = new URL(decodedQParam);
+                    // Attempt to get a file name from the last part of the path
+                    let namePart = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1);
+                    if (!namePart && urlObj.searchParams.has('surl')) { // for surl= type links
+                        namePart = urlObj.searchParams.get('surl');
+                    }
+                    fileNameDisplay.textContent = `Name: ${namePart || 'File (Name not automatically extractable)'}`;
+                } catch (e) {
+                    fileNameDisplay.textContent = 'Name: (Could not parse file name from URL)';
+                }
 
-          } catch (e) {
-            console.error('Error setting up player:', e);
-            playerWrapper.style.display = 'none';
-            statusMessage.textContent = 'Error: The provided content link appears to be malformed.';
-          }
-        } else {
-          console.warn('Missing "q" parameter in URL.');
-          playerWrapper.style.display = 'none';
-          statusMessage.textContent = 'Error: No content link provided. Please return to the homepage and try again.';
-        }
-      })();
+                iframe.src = 'https://player.teraboxfast.com/terabox?q=' + encodeURIComponent(decodedQParam); // Use original qParam for the player
+                
+                iframe.onload = () => {
+                    loadingMessage.style.display = 'none';
+                    playerContainer.style.display = 'block';
+                };
+                iframe.onerror = () => {
+                    loadingMessage.textContent = 'Error loading player. The link might be invalid or the player service is unavailable.';
+                }
+
+            } else {
+                loadingMessage.textContent = 'No Terabox link provided. Please go back and enter a link.';
+                console.warn('Missing "q" parameter in URL.');
+            }
+
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                    // Go back to the main page (index.html in the same directory)
+                    // This assumes index.html is the main page.
+                    // If your main page has a different name or path, adjust this.
+                    window.location.href = './'; // Or specific path like 'index.html'
+                });
+            }
+        });
     </script>
 </body>
 </html>
