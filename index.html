@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terabox Content Viewer Pro</title>
+    <style>
+        /* Global Resets & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1c20; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        h1, h2, h3 {
+            color: #58a6ff; /* Accent color for headings */
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Header & Menu */
+        header {
+            background-color: #22252a;
+            padding: 15px 0;
+            border-bottom: 2px solid #303338;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+        .logo .highlight {
+            color: #ffffff;
+        }
+
+        .menu-button {
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            font-size: 1.8em;
+            cursor: pointer;
+        }
+
+        nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 250px;
+            height: 100%;
+            background-color: #1e2024;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+            padding-top: 60px;
+            z-index: 999;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+        }
+
+        nav.open {
+            display: block;
+            transform: translateX(0);
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav ul li a {
+            display: block;
+            padding: 15px 20px;
+            color: #e0e0e0;
+            font-size: 1.1em;
+            border-bottom: 1px solid #303338;
+        }
+
+        nav ul li a:hover {
+            background-color: #58a6ff;
+            color: #1a1c20;
+            text-decoration: none;
+        }
+        .close-menu-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5em;
+            background: none;
+            border: none;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        /* Main Content Sections */
+        main {
+            flex-grow: 1;
+            padding: 30px 0;
+        }
+
+        .section {
+            background-color: #22252a;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* --- Input, Paste Button, and Process Button Styles --- */
+        .downloader-section .input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px; /* Increased margin */
+            align-items: center; /* Vertically align items */
+        }
+
+        .downloader-section .input-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .downloader-section .input-container input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            background-color: #2c2f36;
+            border: 1px solid #444851;
+            color: #e0e0e0;
+            height: 52px; /* Consistent height */
+            line-height: normal; /* Reset line-height that might affect height */
+        }
+
+        .downloader-section .input-container label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            font-size: 1.1em;
+            background-color: #2c2f36; /* To cover text when not floated */
+            padding: 0 5px;
+        }
+
+        .downloader-section .input-container input[type="text"]:focus + label,
+        .downloader-section .input-container label.float {
+            top: -10px;
+            font-size: 0.9em;
+            color: #58a6ff;
+            transform: translateY(0%); /* Reset Y transform when floated */
+        }
+        
+        .downloader-section .paste-btn {
+            padding: 0 15px; /* Adjusted padding */
+            height: 52px; /* Match input height */
+            border-radius: 5px;
+            font-size: 1.0em; /* Slightly smaller font for paste button */
+            background-color: #3e424a;
+            color: #e0e0e0;
+            border: 1px solid #444851;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .downloader-section .paste-btn:hover {
+            background-color: #4f545e;
+        }
+        
+        .downloader-section .buttonTera { /* Main action button */
+            width: 100%;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            background-color: #58a6ff;
+            color: #1a1c20;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            height: 52px; /* Consistent height */
+        }
+
+        .downloader-section .buttonTera:hover {
+            background-color: #4088d8;
+        }
+        /* --- End of Input Styles --- */
+
+        .message-area {
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .message-area.success {
+            background-color: #28a745;
+            color: white;
+        }
+        .message-area.error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        /* FAQ Section */
+        .faq-item {
+            margin-bottom: 15px;
+            border: 1px solid #303338;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .faq-question {
+            background-color: #2c2f36;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        .faq-question:hover {
+            background-color: #353941;
+        }
+        .faq-answer {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            background-color: #22252a;
+        }
+        .faq-answer.open {
+            padding: 15px;
+            max-height: 500px;
+        }
+        .faq-toggle {
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+        }
+        .faq-question.active .faq-toggle {
+            transform: rotate(45deg);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            background-color: #22252a;
+            margin: 10% auto;
+            padding: 30px;
+            border: 1px solid #303338;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        }
+        .close-modal-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .close-modal-btn:hover,
+        .close-modal-btn:focus {
+            color: #e0e0e0;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #22252a;
+            color: #aaa;
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid #303338;
+            font-size: 0.9em;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .logo { font-size: 1.5em; }
+            .header-content { padding: 0 10px; }
+            .container { width: 95%; }
+            .downloader-section .input-wrapper { flex-direction: column; }
+            .downloader-section .input-wrapper .paste-btn { width: 100%; margin-top:10px; margin-left:0; }
+            .downloader-section .input-container input[type="text"] { width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .modal-content { margin: 20% auto; width: 90%; }
+            .downloader-section .input-container input[type="text"],
+            .downloader-section .paste-btn,
+            .downloader-section .buttonTera { font-size: 1em; padding: 12px; height: 48px; }
+            .downloader-section .input-container label { font-size: 1em; left: 12px; }
+            .downloader-section .input-container input[type="text"]:focus + label,
+            .downloader-section .input-container label.float { top: -8px; font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container header-content">
+            <div class="logo">Tera<span class="highlight">Viewer</span> Pro</div>
+            <button class="menu-button" id="menuBtn" aria-label="Open menu">☰</button>
+        </div>
+    </header>
+
+    <nav id="sideMenu">
+        <button class="close-menu-btn" id="closeMenuBtn" aria-label="Close menu">×</button>
+        <ul>
+            <li><a href="#" id="aboutUsLink">About Us</a></li>
+            <li><a href="#" id="contactUsLink">Contact Us</a></li>
+            <li><a href="#downloader">Content Viewer</a></li>
+            <li><a href="#whatIsTerabox">What is Terabox?</a></li>
+            <li><a href="#howToUse">How to Use</a></li>
+            <li><a href="#faq">FAQ</a></li>
+        </ul>
+    </nav>
+
+    <main class="container">
+        <section id="downloader" class="section downloader-section">
+            <h2>Access Terabox Content</h2>
+            <p>Paste your Terabox link below to view the content using an embedded player.</p>
+            
+            <div class="input-wrapper">
+                <div class="input-container">
+                    <input type="text" id="link" name="url" required> <!-- `required` helps with :valid/:invalid if needed, but JS handles empty -->
+                    <label for="link">Enter Terabox link here</label>
+                </div>
+                <button class="paste-btn" id="pasteBtn" aria-label="Paste link from clipboard">Paste</button>
+            </div>
+
+            <button id="getVideoBtn" class="buttonTera">Process Link & View Content</button>
+            <div id="messageArea" class="message-area" style="display: none;"></div>
+        </section>
+
+        <section id="whatIsTerabox" class="section">
+            <h2>What is Terabox?</h2>
+            <p>Terabox is a cloud storage service offering users free storage to upload, store, and share files. It's commonly used for personal backups and sharing large files.</p>
+        </section>
+
+        <section id="whatItDoes" class="section">
+            <h2>What This Terabox Tool Does</h2>
+            <p>This Terabox Content Viewer helps you access content from Terabox links by embedding them in an on-page player. When you paste a valid Terabox link from a supported domain, this tool will attempt to load the content (often video) using an external player service (`player.teraboxfast.com`).</p>
+            <p>This tool primarily acts as a convenience wrapper. The actual playback and content handling depend on the external player service. It may work best for video files.</p>
+            <p>Supported Terabox domains include: <code>www.mirrobox.com, www.nephobox.com, freeterabox.com, www.freeterabox.com, 1024tera.com, 4funbox.co, www.4funbox.com, mirrobox.com, nephobox.com, terabox.app, terabox.com, www.terabox.ap, terabox.fun, www.terabox.com, www.1024tera.co, www.momerybox.com, teraboxapp.com, momerybox.com, tibibox.com, www.tibibox.com, www.teraboxapp.com</code>, and similar structures.</p>
+        </section>
+
+        <section id="howToUse" class="section">
+            <h2>How to Use This Tool</h2>
+            <ol>
+                <li>Find the Terabox link for the content you want to access.</li>
+                <li>Copy the complete URL.</li>
+                <li>Paste the URL into the input field on this page, or use the "Paste" button.</li>
+                <li>Click the "Process Link & View Content" button.</li>
+                <li>If the link is valid and supported by the player, you will be taken to a new page where the content will attempt to load in an embedded player.</li>
+            </ol>
+        </section>
+
+        <section id="faq" class="section">
+            <h2>Frequently Asked Questions (FAQ)</h2>
+            <div class="faq-item">
+                <div class="faq-question">Is this tool safe to use? <span class="faq-toggle">+</span></div>
+                <div class="faq-answer">
+                    <p>Yes, this tool is safe. It operates entirely within your browser. We do not ask for Terabox credentials or store your links. The content player used (`player.teraboxfast.com`) is an external service; ensure you are comfortable with its terms if available.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">Does this tool download files? <span class="faq-toggle">+</span></div>
+                <div class="faq-answer">
+                    <p>No, this tool does not directly download files to your device. It embeds content, typically video, using an external player for on-page viewing. If the player offers a download button, that functionality comes from the player service itself, not this tool.</p>
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question">Why can't I see the file name? <span class="faq-toggle">+</span></div>
+                <div class="faq-answer">
+                    <p>Due to browser security restrictions, our page cannot access information (like file names) from within the embedded player if it's from a different domain (`player.teraboxfast.com`). The player itself might display the file name if it's designed to do so.</p>
+                </div>
+            </div>
+             <div class="faq-item">
+                <div class="faq-question">What if the content doesn't load or play? <span class="faq-toggle">+</span></div>
+                <div class="faq-answer">
+                    <p>This can happen for several reasons: 
+                        1. The Terabox link is invalid, expired, or private. 
+                        2. The content type is not supported by the `player.teraboxfast.com` service (it may primarily support videos). 
+                        3. The `player.teraboxfast.com` service might be temporarily down or have issues. 
+                        Try the link directly in Terabox to ensure it's active.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2023 Terabox Viewer Pro. All rights reserved. We are not affiliated with Terabox or player.teraboxfast.com.</p>
+        </div>
+    </footer>
+
+    <!-- About Us Modal -->
+    <div id="aboutUsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="closeAboutModal">×</span>
+            <h2>About Us</h2>
+            <p>Welcome to Terabox Viewer Pro! We aim to provide a user-friendly way to view content shared via Terabox links using an embedded player.</p>
+            <p>This tool relies on external services for playback and is offered as a convenience. Developed by web enthusiasts focusing on clean and helpful applications.</p>
+            <p><strong>Disclaimer:</strong> This tool is independent and not affiliated with Terabox or player.teraboxfast.com.</p>
+        </div>
+    </div>
+
+    <!-- Contact Us Modal -->
+    <div id="contactUsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="closeContactModal">×</span>
+            <h2>Contact Us</h2>
+            <p>For feedback or suggestions about this tool, email: <a href="mailto:support@example-teraviewer.com">support@example-teraviewer.com</a> (replace with actual email).</p>
+            <p><strong>Note:</strong> For issues with Terabox accounts or specific file playback on the player service, please contact Terabox or the player service provider directly.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Menu Functionality ---
+            const menuBtn = document.getElementById('menuBtn');
+            const closeMenuBtn = document.getElementById('closeMenuBtn');
+            const sideMenu = document.getElementById('sideMenu');
+            const navLinks = sideMenu.querySelectorAll('a');
+
+            menuBtn.addEventListener('click', () => sideMenu.classList.add('open'));
+            closeMenuBtn.addEventListener('click', () => sideMenu.classList.remove('open'));
+            navLinks.forEach(link => {
+                if (!link.id.includes('Link')) { // General check for non-modal links
+                    link.addEventListener('click', () => {
+                        if (link.getAttribute('href').startsWith('#') && document.getElementById(link.getAttribute('href').substring(1))) {
+                           sideMenu.classList.remove('open');
+                           document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                        }
+                    });
+                }
+            });
+            document.addEventListener('click', (event) => {
+                if (sideMenu.classList.contains('open') && !sideMenu.contains(event.target) && event.target !== menuBtn) {
+                    sideMenu.classList.remove('open');
+                }
+            });
+
+            // --- Modal Functionality ---
+            const aboutUsLink = document.getElementById('aboutUsLink');
+            const contactUsLink = document.getElementById('contactUsLink');
+            const aboutUsModal = document.getElementById('aboutUsModal');
+            const contactUsModal = document.getElementById('contactUsModal');
+            const closeAboutModal = document.getElementById('closeAboutModal');
+            const closeContactModal = document.getElementById('closeContactModal');
+
+            function openModal(modal) { modal.style.display = 'block'; sideMenu.classList.remove('open'); }
+            function closeModal(modal) { modal.style.display = 'none'; }
+
+            if (aboutUsLink) aboutUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(aboutUsModal); });
+            if (contactUsLink) contactUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(contactUsModal); });
+            if (closeAboutModal) closeAboutModal.addEventListener('click', () => closeModal(aboutUsModal));
+            if (closeContactModal) closeContactModal.addEventListener('click', () => closeModal(contactUsModal));
+            window.addEventListener('click', (event) => {
+                if (event.target === aboutUsModal) closeModal(aboutUsModal);
+                if (event.target === contactUsModal) closeModal(contactUsModal);
+            });
+
+            // --- FAQ Accordion ---
+            document.querySelectorAll('.faq-item .faq-question').forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const toggle = question.querySelector('.faq-toggle');
+                    const isOpen = answer.classList.contains('open');
+
+                    document.querySelectorAll('.faq-answer.open').forEach(openAnswer => {
+                        if (openAnswer !== answer) {
+                            openAnswer.classList.remove('open');
+                            openAnswer.style.maxHeight = null;
+                            // openAnswer.style.padding = "0 15px"; // This might cause jumpiness if only max-height is animated
+                            const prevQuestion = openAnswer.previousElementSibling;
+                            prevQuestion.classList.remove('active');
+                            prevQuestion.querySelector('.faq-toggle').textContent = '+';
+                        }
+                    });
+
+                    answer.classList.toggle('open');
+                    question.classList.toggle('active');
+                    if (answer.classList.contains('open')) {
+                        answer.style.maxHeight = answer.scrollHeight + "px";
+                        toggle.textContent = '-';
+                    } else {
+                        answer.style.maxHeight = null;
+                        toggle.textContent = '+';
+                    }
+                });
+            });
+
+            // --- Content Processor Logic ---
+            const pasteBtn = document.getElementById('pasteBtn');
+            const urlInput = document.getElementById('link');
+            const label = document.querySelector('label[for="link"]');
+            const getVideoBtn = document.getElementById('getVideoBtn');
+            const messageArea = document.getElementById('messageArea');
+
+            // Label animation
+            if (urlInput && label) {
+                urlInput.addEventListener('focus', () => label.classList.add('float'));
+                urlInput.addEventListener('blur', () => {
+                    if (!urlInput.value) {
+                        label.classList.remove('float');
+                    }
+                });
+                // Initialize if pre-filled (e.g. browser back button)
+                if (urlInput.value) {
+                    label.classList.add('float');
+                }
+            }
+            
+            // Paste functionality
+            if (pasteBtn) {
+                pasteBtn.addEventListener('click', () => {
+                    navigator.clipboard.readText().then(text => {
+                        if (urlInput && label) {
+                            urlInput.value = text;
+                            label.classList.add('float');
+                            urlInput.focus();
+                            showMessage('', ''); // Clear previous messages
+                        }
+                    }).catch(err => {
+                        console.error('Failed to read clipboard:', err);
+                        showMessage('Failed to paste from clipboard. Please paste manually.', 'error');
+                    });
+                });
+            }
+
+            const supportedDomains = [
+                "www.mirrobox.com", "www.nephobox.com", "freeterabox.com", "www.freeterabox.com",
+                "1024tera.com", "4funbox.co", "www.4funbox.com", "mirrobox.com", "nephobox.com",
+                "terabox.app", "terabox.com", "www.terabox.ap", "terabox.fun", 
+                "www.1024tera.co", "www.momerybox.com", "teraboxapp.com", "momerybox.com",
+                "tibibox.com", "www.tibibox.com", "www.teraboxapp.com"
+                // Note: www.terabox.com is listed twice in user spec, one is enough.
+            ];
+
+            function isValidTeraboxUrl(url) {
+                if (!url) return false;
+                try {
+                    const parsedUrl = new URL(url);
+                    let hostname = parsedUrl.hostname;
+                    const isSupportedDomain = supportedDomains.includes(hostname) || supportedDomains.includes(hostname.replace(/^www\./, ''));
+
+                    if (!isSupportedDomain) return false;
+
+                    // Check for common Terabox sharing patterns. The player might expect specific formats.
+                    // The key is that player.teraboxfast.com gets the full original Terabox share URL.
+                    return parsedUrl.pathname.includes('/s/') || 
+                           parsedUrl.search.includes('surl=') ||
+                           parsedUrl.pathname.includes('/share/link'); // Common patterns
+                } catch (e) {
+                    return false; // Invalid URL format
+                }
+            }
+
+            function showMessage(message, type) {
+                if (messageArea) {
+                    messageArea.textContent = message;
+                    messageArea.className = `message-area ${type}`;
+                    messageArea.style.display = message ? 'block' : 'none';
+                }
+            }
+            
+            if (getVideoBtn) {
+                getVideoBtn.addEventListener('click', () => {
+                    const userLink = urlInput.value.trim();
+                    showMessage('', ''); // Clear previous messages
+
+                    if (!userLink) {
+                        showMessage('Please paste a Terabox URL first.', 'error');
+                        return;
+                    }
+
+                    if (isValidTeraboxUrl(userLink)) {
+                        // Ensure the URL is properly encoded to be part of another URL's query string
+                        const encodedUserLink = encodeURIComponent(userLink);
+                        const videoPlayerPage = 'video-player.html'; // Assumes in the same directory
+                        const videoLink = `${videoPlayerPage}?q=${encodedUserLink}`;
+                        
+                        showMessage('Valid link. Redirecting to player...', 'success');
+                        setTimeout(() => {
+                           window.location.href = videoLink;
+                        }, 1000); // Short delay for user to see message
+                    } else {
+                        showMessage('Invalid or unsupported Terabox URL. Please check the link and try again. Ensure it starts with http(s):// and is from a supported domain with a share path (e.g., /s/...).', 'error');
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

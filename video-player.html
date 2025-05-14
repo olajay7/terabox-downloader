@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terabox Content Player</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1c20;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px; /* Add some padding around */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align to top */
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .title-bar {
+            width: 100%;
+            max-width: 800px; /* Match player max-width */
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .title-bar h1 {
+            color: #58a6ff;
+            font-size: 1.8em;
+            margin: 0;
+        }
+        .player-wrapper {
+            width: 100%;
+            max-width: 800px; /* Or your preferred max width */
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        #teraboxPlayer {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Common video aspect ratio, adjust if needed */
+            border: none;
+        }
+        .status-message {
+            margin-top: 20px;
+            font-size: 1.1em;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 30px; /* Increased margin */
+        }
+        .controls a {
+            color: #58a6ff;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #22252a;
+            border-radius: 5px;
+            border: 1px solid #303338;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 1em;
+        }
+        .controls a:hover {
+            background-color: #58a6ff;
+            color: #1a1c20;
+        }
+         @media (max-width: 600px) {
+            .title-bar h1 { font-size: 1.5em; }
+            .player-wrapper { width: 100%; } /* Use full width on smaller screens */
+            body { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="title-bar">
+        <h1>Content Player</h1>
+    </div>
+
+    <div class="player-wrapper" id="playerWrapper" style="display: none;">
+        <iframe
+            id="teraboxPlayer"
+            allowfullscreen
+            allow="autoplay; encrypted-media;" <!-- Recommended allow attributes for media -->
+            sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-presentation" <!-- Consider sandbox for security -->
+            >
+            <!-- src will be set by JS -->
+        </iframe>
+    </div>
+
+    <div id="statusMessage" class="status-message">Loading player...</div>
+
+    <div class="controls">
+        <a href="index.html">Go Back to Homepage</a>
+    </div>
+
+    <script>
+      (function () {
+        const qParam = new URLSearchParams(window.location.search).get('q');
+        const iframe = document.getElementById('teraboxPlayer');
+        const statusMessage = document.getElementById('statusMessage');
+        const playerWrapper = document.getElementById('playerWrapper');
+
+        if (qParam) {
+          try {
+            // qParam should be the already URI-encoded Terabox URL.
+            // The player service (teraboxfast.com) will decode it.
+            const playerSrc = 'https://player.teraboxfast.com/terabox?q=' + qParam;
+            
+            statusMessage.textContent = 'Loading player... Please wait.';
+            playerWrapper.style.display = 'block'; // Show wrapper
+            iframe.src = playerSrc;
+
+            iframe.onload = function() {
+                statusMessage.textContent = 'Player loaded. If content does not start, check the link or try again.';
+                // You might want to hide the status message after successful load,
+                // or change it to something like "Enjoy your content!"
+                // setTimeout(() => { statusMessage.style.display = 'none'; }, 3000);
+            };
+            iframe.onerror = function() {
+                playerWrapper.style.display = 'none'; // Hide iframe wrapper on error
+                statusMessage.textContent = 'Error: Could not load content in the player. The link might be invalid, expired, private, or the player service may be unavailable or does not support this content type.';
+            };
+
+          } catch (e) {
+            console.error('Error setting up player:', e);
+            playerWrapper.style.display = 'none';
+            statusMessage.textContent = 'Error: The provided content link appears to be malformed.';
+          }
+        } else {
+          console.warn('Missing "q" parameter in URL.');
+          playerWrapper.style.display = 'none';
+          statusMessage.textContent = 'Error: No content link provided. Please return to the homepage and try again.';
+        }
+      })();
+    </script>
+</body>
+</html>
