@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terabox Downloader - Download & Play Files From Terabox</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <!-- Note: Using Tailwind via CDN. For production, consider installing it. -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"> -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -46,7 +47,8 @@
         header {
             background-color: white;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: relative;
+            position: sticky; /* Changed from relative for better stickiness */
+            top: 0;
             z-index: 100;
         }
         
@@ -91,6 +93,7 @@
             font-weight: 500;
             font-size: 1rem;
             transition: color 0.3s;
+            cursor: pointer; /* Added for clickable links */
         }
         
         .nav-links a:hover {
@@ -129,9 +132,12 @@
         }
         
         /* Input Box Styles */
+        .input-section { /* Added a wrapper section for consistency */
+             padding: 50px 0;
+        }
         .input-box {
             max-width: 600px;
-            margin: 20px auto;
+            margin: 0 auto; /* Centered, removed top margin as section handles it */
             padding: 40px 20px;
             background-color: white;
             border-radius: 10px;
@@ -157,18 +163,19 @@
             outline: none;
         }
         
-        label {
+        label[for="link"] { /* Made specific to avoid conflict with other labels */
             position: absolute;
             left: 15px;
-            top: 15px;
+            top: 17px; /* Adjusted for better vertical alignment */
             font-size: 1rem;
             color: #6c757d;
             pointer-events: none;
             transition: all 0.3s ease;
         }
         
-        .input-field:focus ~ label,
-        .float {
+        .input-field:focus ~ label[for="link"],
+        .input-field:not(:placeholder-shown) ~ label[for="link"], /* Added for pre-filled */
+        label[for="link"].float { /* Added .float class for JS control */
             top: -10px;
             left: 10px;
             font-size: 0.8rem;
@@ -189,7 +196,7 @@
             font-size: 1.2rem;
         }
         
-        .buttonTera {
+        .buttonTera { /* This is also getVideoBtn */
             display: block;
             width: 100%;
             padding: 15px;
@@ -206,6 +213,32 @@
         .buttonTera:hover {
             background-color: var(--secondary);
         }
+
+        /* Message Area for JS feedback */
+        .message-area {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .message-area.success {
+            background-color: #e6ffed;
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        .message-area.error {
+            background-color: #ffebee;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        .message-area.info {
+            background-color: #e3f2fd;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
         
         /* Features Section */
         .features {
@@ -246,6 +279,7 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s;
+            text-align: left; /* Better for feature descriptions */
         }
         
         .feature:hover {
@@ -256,18 +290,22 @@
             font-size: 2.5rem;
             color: var(--primary);
             margin-bottom: 20px;
+            display: block; /* Center icon if text-align: center on feature is desired */
+            text-align: center; 
         }
         
         .feature h3 {
             font-size: 1.3rem;
             font-weight: 600;
             margin-bottom: 15px;
+            text-align: center;
         }
         
         /* How to Use Section */
         .how-to-use {
             padding: 80px 0;
-            background-color: var(--bg-light);
+            background-color: var(--bg-light); /* Uses CSS var */
+            text-align: center; /* Center section title and intro p */
         }
         
         .steps-grid {
@@ -312,6 +350,7 @@
         .supported-urls {
             padding: 80px 0;
             background-color: white;
+            text-align: center; /* Center section title and intro p */
         }
         
         .urls-grid {
@@ -327,20 +366,21 @@
             border-radius: 5px;
             text-align: center;
             font-weight: 500;
+            color: var(--text); /* Ensure text color is set */
         }
         
         /* FAQ Section */
-        .faq {
+        .faq { /* Renamed from .faq to match new JS, original html class was .faq */
             padding: 80px 0;
-            background-color: var(--bg-light);
+            background-color: var(--bg-light); /* Uses CSS var */
         }
         
-        .accordion {
+        .accordion { /* This is the container for faq-items */
             max-width: 800px;
             margin: 50px auto 0;
         }
         
-        .accordion-item {
+        .faq-item { /* Renamed from .accordion-item to match new JS */
             background-color: white;
             border-radius: 5px;
             margin-bottom: 15px;
@@ -348,7 +388,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .accordion-header {
+        .faq-question { /* Renamed from .accordion-header to match new JS */
             padding: 20px;
             font-weight: 600;
             cursor: pointer;
@@ -356,26 +396,33 @@
             justify-content: space-between;
             align-items: center;
         }
-        
-        .accordion-icon {
-            font-size: 1.2rem;
-            transition: transform 0.3s;
+         .faq-question.active { /* Style for active question */
+            color: var(--primary);
         }
         
-        .accordion-content {
+        .faq-toggle { /* Renamed from .accordion-icon to match new JS */
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+            font-weight: bold; /* Make +/- more visible */
+        }
+         .faq-question.active .faq-toggle { /* Rotate when active */
+            /* transform: rotate(180deg); */ /* Not needed if text changes from + to - */
+        }
+
+        .faq-answer { /* Renamed from .accordion-content to match new JS */
             padding: 0 20px;
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+            color: #555; /* Softer color for answer */
         }
         
-        .accordion-item.active .accordion-content {
-            padding: 0 20px 20px;
-            max-height: 1000px;
-        }
-        
-        .accordion-item.active .accordion-icon {
-            transform: rotate(180deg);
+        /* .faq-item.active .faq-answer combined with JS logic for maxHeight */
+        /* This class is added by JS: .faq-answer.open */
+        .faq-answer.open {
+            padding-top: 0; /* Smooth transition with padding */
+            padding-bottom: 20px; 
+            /* max-height is set by JS */
         }
         
         /* Footer */
@@ -410,6 +457,7 @@
             text-decoration: none;
             color: #adb5bd;
             transition: color 0.3s;
+            cursor: pointer; /* For clickable links */
         }
         
         .footer-links a:hover {
@@ -456,111 +504,113 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
             z-index: 1000;
             overflow-y: auto;
+            align-items: center; /* Vertically center */
+            justify-content: center; /* Horizontally center */
+            padding: 20px; /* Padding for smaller screens */
         }
         
         .modal-content {
             background-color: white;
-            margin: 50px auto;
+            /* margin: 50px auto; REMOVED for flex centering */
             padding: 30px;
             max-width: 700px;
+            width: 100%; /* Responsive width */
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             position: relative;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .close {
+        .modal-close-btn { /* Changed class for clarity, was .close */
             position: absolute;
             top: 15px;
             right: 20px;
-            font-size: 1.5rem;
+            font-size: 1.8rem; /* Larger close icon */
             cursor: pointer;
             color: #adb5bd;
             transition: color 0.3s;
+            line-height: 1;
         }
         
-        .close:hover {
+        .modal-close-btn:hover {
             color: var(--text);
         }
-        
-        /* Player Page Styles */
-        .player-container {
-            display: none;
-            max-width: 1000px;
-            margin: 50px auto;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        .player-header {
-            padding: 20px;
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        .player-body {
-            padding: 20px;
-        }
-        
-        .player-info {
+
+        .modal-content h2 {
+            color: var(--primary);
             margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--gray-light);
         }
-        
-        .player-frame-container {
-            width: 100%;
-            padding-top: 25px;
-            position: relative;
-            min-height: 500px;
+        .modal-content p, .modal-content li {
+            margin-bottom: 10px;
+            color: #555;
         }
-        
-        .terabox-player {
-            width: 100%;
-            height: 500px;
-            border: none;
+        .modal-content .social-icons a {
+            background-color: var(--gray-light);
+            color: var(--primary);
         }
-        
-        .back-button {
-            display: inline-block;
-            padding: 10px 20px;
+        .modal-content .social-icons a:hover {
             background-color: var(--primary);
             color: white;
-            text-decoration: none;
+        }
+        .modal-content form input, .modal-content form textarea {
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid var(--gray-light); 
             border-radius: 5px;
-            font-weight: 500;
-            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .modal-content form button {
+            padding: 10px 20px; 
+            background-color: var(--primary); 
+            color: white; border: none; 
+            border-radius: 5px; cursor: pointer;
             transition: background-color 0.3s;
         }
-        
-        .back-button:hover {
+        .modal-content form button:hover {
             background-color: var(--secondary);
         }
         
         /* Responsive Styles */
         @media (max-width: 768px) {
             .navbar {
-                flex-wrap: wrap;
+                flex-wrap: wrap; /* Allow hamburger to be on its own line if needed */
+                position: relative; /* For absolute positioning of nav-links */
             }
             
             .nav-links {
-                display: none;
-                width: 100%;
+                display: none; /* Hidden by default */
                 flex-direction: column;
-                padding-top: 20px;
+                width: 100%;
+                background-color: white; /* Background for mobile menu */
+                position: absolute;
+                top: 100%; /* Position below the navbar */
+                left: 0;
+                padding: 15px 0;
+                box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+                z-index: 99; /* Below header but above content */
             }
             
-            .nav-links.show {
+            .nav-links.show { /* Class to show mobile menu */
                 display: flex;
             }
             
             .nav-links li {
                 margin-left: 0;
-                margin-bottom: 15px;
+                margin-bottom: 0; /* Remove bottom margin */
+                width: 100%;
+                text-align: center;
+            }
+            .nav-links li a {
+                display: block; /* Make links full width */
+                padding: 10px 20px; /* Add padding */
             }
             
             .hamburger {
@@ -584,22 +634,9 @@
             }
             
             .modal-content {
-                margin: 20px;
+                /* margin: 20px; Use padding on .modal instead */
                 padding: 20px;
             }
-        }
-
-        /* Player page specific styles */
-        #playerPage {
-            display: none;
-        }
-
-        #mainPage {
-            display: block;
-        }
-
-        .player-section {
-            padding: 50px 0;
         }
     </style>
 </head>
@@ -617,8 +654,8 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <ul class="nav-links" id="navLinks">
-                        <li><a href="#" class="about-btn">About Us</a></li>
-                        <li><a href="#" class="contact-btn">Contact Us</a></li>
+                        <li><a id="aboutUsLink">About Us</a></li>
+                        <li><a id="contactUsLink">Contact Us</a></li>
                         <li><a href="#faq">FAQ</a></li>
                     </ul>
                 </nav>
@@ -628,8 +665,8 @@
         <!-- Hero Section -->
         <section class="hero">
             <div class="container">
-                <h2>TeraBox Downloader</h2>
-                <p>Download files from Terabox without login. Fast, secure, and easy to use downloader for all your Terabox files.</p>
+                <h2 class="animate__animated animate__fadeInDown">TeraBox Downloader</h2>
+                <p class="animate__animated animate__fadeInUp">Download files from Terabox without login. Fast, secure, and easy to use downloader for all your Terabox files.</p>
             </div>
         </section>
 
@@ -638,13 +675,14 @@
             <div class="container">
                 <div class="input-box">
                     <div class="input-group">
-                        <input type="url" id="link" class="input-field">
+                        <input type="url" id="link" class="input-field" placeholder=" "> <!-- Placeholder for floating label -->
                         <label for="link">Paste Terabox URL here</label>
-                        <button class="paste-btn" title="Paste from clipboard">
+                        <button class="paste-btn" id="pasteBtn" title="Paste from clipboard">
                             <i class="fas fa-paste"></i>
                         </button>
                     </div>
-                    <button class="buttonTera">Download Now</button>
+                    <button class="buttonTera" id="getVideoBtn">Download Now</button>
+                    <div id="messageArea" class="message-area"></div>
                 </div>
             </div>
         </section>
@@ -653,7 +691,7 @@
         <section class="features">
             <div class="container">
                 <h2 class="section-title">What is Terabox?</h2>
-                <p>TeraBox is a cloud storage service that offers 1TB of free storage space for your files, documents, photos, videos, and more. It allows you to store and share files easily across different devices.</p>
+                <p style="max-width: 800px; margin: 0 auto 30px auto;">TeraBox is a cloud storage service that offers 1TB of free storage space for your files, documents, photos, videos, and more. It allows you to store and share files easily across different devices.</p>
                 
                 <div class="features-grid">
                     <div class="feature">
@@ -674,23 +712,23 @@
                 </div>
                 
                 <h2 class="section-title" style="margin-top: 80px;">What is Terabox Downloader?</h2>
-                <p>Terabox Downloader is a tool that allows you to download files from Terabox links without needing to log in or create an account. It simplifies the process of accessing and downloading files shared through Terabox.</p>
+                <p style="max-width: 800px; margin: 0 auto 30px auto;">Terabox Downloader is a tool that allows you to download files from Terabox links without needing to log in or create an account. It simplifies the process of accessing and downloading files shared through Terabox.</p>
                 
                 <div class="features-grid">
                     <div class="feature">
                         <i class="fas fa-bolt feature-icon"></i>
-                        <h3>Fast Downloads</h3>
-                        <p>Download files quickly and directly without unnecessary delays or redirects.</p>
+                        <h3>Fast Processing</h3>
+                        <p>Quickly validate your link and get redirected to the media player.</p>
                     </div>
                     <div class="feature">
-                        <i class="fas fa-lock feature-icon"></i>
+                        <i class="fas fa-user-slash feature-icon"></i> <!-- Changed icon -->
                         <h3>No Login Required</h3>
-                        <p>Access and download files without creating an account or logging in to Terabox.</p>
+                        <p>Access and play/download media without creating an account or logging in to Terabox via this tool.</p>
                     </div>
                     <div class="feature">
-                        <i class="fas fa-play feature-icon"></i>
+                        <i class="fas fa-play-circle feature-icon"></i> <!-- Changed icon -->
                         <h3>Video Playing</h3>
-                        <p>Stream and play videos directly without downloading them completely first.</p>
+                        <p>Stream and play videos directly in an embedded player on a dedicated page.</p>
                     </div>
                 </div>
             </div>
@@ -700,7 +738,7 @@
         <section class="how-to-use">
             <div class="container">
                 <h2 class="section-title">How to Use</h2>
-                <p>Follow these simple steps to download files from Terabox:</p>
+                <p style="max-width: 800px; margin: 0 auto 30px auto;">Follow these simple steps to download files from Terabox:</p>
                 
                 <div class="steps-grid">
                     <div class="step">
@@ -719,13 +757,13 @@
                         <div class="step-number">3</div>
                         <i class="fas fa-mouse-pointer step-icon"></i>
                         <h3>Click Download</h3>
-                        <p>Click the "Download Now" button and wait for the process to complete.</p>
+                        <p>Click the "Download Now" button to process the link.</p>
                     </div>
                     <div class="step">
                         <div class="step-number">4</div>
-                        <i class="fas fa-download step-icon"></i>
-                        <h3>Get Your File</h3>
-                        <p>Download your file directly or stream videos in the player.</p>
+                        <i class="fas fa-tv step-icon"></i> <!-- Changed icon -->
+                        <h3>View or Download</h3>
+                        <p>You'll be redirected to a player page. The player itself might offer download options.</p>
                     </div>
                 </div>
             </div>
@@ -735,30 +773,10 @@
         <section class="supported-urls">
             <div class="container">
                 <h2 class="section-title">Supported Terabox URLs</h2>
-                <p>Our downloader supports all Terabox domains including:</p>
+                <p style="max-width: 800px; margin: 0 auto 30px auto;">Our downloader supports all Terabox domains including:</p>
                 
-                <div class="urls-grid">
-                    <div class="url-item">www.mirrobox.com</div>
-                    <div class="url-item">www.nephobox.com</div>
-                    <div class="url-item">freeterabox.com</div>
-                    <div class="url-item">www.freeterabox.com</div>
-                    <div class="url-item">1024tera.com</div>
-                    <div class="url-item">4funbox.co</div>
-                    <div class="url-item">www.4funbox.com</div>
-                    <div class="url-item">mirrobox.com</div>
-                    <div class="url-item">nephobox.com</div>
-                    <div class="url-item">terabox.app</div>
-                    <div class="url-item">terabox.com</div>
-                    <div class="url-item">www.terabox.ap</div>
-                    <div class="url-item">terabox.fun</div>
-                    <div class="url-item">www.terabox.com</div>
-                    <div class="url-item">www.1024tera.co</div>
-                    <div class="url-item">www.momerybox.com</div>
-                    <div class="url-item">teraboxapp.com</div>
-                    <div class="url-item">momerybox.com</div>
-                    <div class="url-item">tibibox.com</div>
-                    <div class="url-item">www.tibibox.com</div>
-                    <div class="url-item">www.teraboxapp.com</div>
+                <div class="urls-grid" id="supportedUrlsGrid">
+                    <!-- URLs will be populated by JavaScript -->
                 </div>
             </div>
         </section>
@@ -769,49 +787,49 @@
                 <h2 class="section-title">Frequently Asked Questions</h2>
                 
                 <div class="accordion">
-                    <div class="accordion-item">
-                        <div class="accordion-header">
+                    <div class="faq-item">
+                        <div class="faq-question">
                             <span>Is it free to use this downloader?</span>
-                            <i class="fas fa-chevron-down accordion-icon"></i>
+                            <span class="faq-toggle">+</span>
                         </div>
-                        <div class="accordion-content">
+                        <div class="faq-answer">
                             <p>Yes, our Terabox Downloader is completely free to use. There are no hidden charges or subscription fees.</p>
                         </div>
                     </div>
-                    <div class="accordion-item">
-                        <div class="accordion-header">
+                    <div class="faq-item">
+                        <div class="faq-question">
                             <span>Do I need to create an account to download files?</span>
-                            <i class="fas fa-chevron-down accordion-icon"></i>
+                            <span class="faq-toggle">+</span>
                         </div>
-                        <div class="accordion-content">
-                            <p>No, you don't need to create an account or login to download files from Terabox using our downloader.</p>
+                        <div class="faq-answer">
+                            <p>No, you don't need to create an account or login to process Terabox links using this tool.</p>
                         </div>
                     </div>
-                    <div class="accordion-item">
-                        <div class="accordion-header">
+                     <div class="faq-item">
+                        <div class="faq-question">
+                            <span>Can I download files directly with this tool?</span>
+                            <span class="faq-toggle">+</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>This tool redirects you to a player page where the content (like videos) can be streamed. The player itself (from `player.teraboxfast.com`) might offer a download button for the file. This website does not directly initiate the file download itself.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
                             <span>Is there a file size limit?</span>
-                            <i class="fas fa-chevron-down accordion-icon"></i>
+                            <span class="faq-toggle">+</span>
                         </div>
-                        <div class="accordion-content">
-                            <p>No, there is no file size limit. You can download files of any size from Terabox using our downloader.</p>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <div class="accordion-header">
-                            <span>Can I download multiple files at once?</span>
-                            <i class="fas fa-chevron-down accordion-icon"></i>
-                        </div>
-                        <div class="accordion-content">
-                            <p>Currently, our downloader supports downloading one file at a time. For multiple files, you'll need to process each link separately.</p>
+                        <div class="faq-answer">
+                            <p>There is no specific file size limit imposed by this tool. However, the ability to play or download large files depends on the Terabox service and the capabilities of the `player.teraboxfast.com` service.</p>
                         </div>
                     </div>
-                    <div class="accordion-item">
-                        <div class="accordion-header">
+                    <div class="faq-item">
+                        <div class="faq-question">
                             <span>Is it safe to use this downloader?</span>
-                            <i class="fas fa-chevron-down accordion-icon"></i>
+                            <span class="faq-toggle">+</span>
                         </div>
-                        <div class="accordion-content">
-                            <p>Yes, our downloader is safe to use. We don't store your files or personal information. All processes happen in your browser, ensuring your privacy.</p>
+                        <div class="faq-answer">
+                            <p>Yes, this website is safe to use. We don't store your links or personal information. The actual media processing is handled by `player.teraboxfast.com` which is a third-party service.</p>
                         </div>
                     </div>
                 </div>
@@ -824,20 +842,20 @@
                 <div class="footer-grid">
                     <div class="footer-section">
                         <h3>TeraBox Downloader</h3>
-                        <p>Download files from Terabox without login. Fast, secure, and easy to use.</p>
+                        <p>Easily access and play Terabox files. Fast, secure, and user-friendly.</p>
                         <div class="social-icons">
-                            <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                            <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                            <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Telegram"><i class="fab fa-telegram"></i></a>
                         </div>
                     </div>
                     <div class="footer-section">
                         <h3>Quick Links</h3>
                         <ul class="footer-links">
                             <li><a href="#">Home</a></li>
-                            <li><a href="#" class="about-btn">About Us</a></li>
-                            <li><a href="#" class="contact-btn">Contact Us</a></li>
+                            <li><a id="footerAboutUsLink">About Us</a></li>
+                            <li><a id="footerContactUsLink">Contact Us</a></li>
                             <li><a href="#faq">FAQ</a></li>
                         </ul>
                     </div>
@@ -851,277 +869,324 @@
                         </ul>
                     </div>
                     <div class="footer-section">
-                        <h3>Contact</h3>
+                        <h3>Contact Info</h3>
                         <ul class="footer-links">
-                            <li><i class="fas fa-envelope"></i> support@teradownloader.com</li>
-                            <li><i class="fas fa-map-marker-alt"></i> Los Angeles, CA, USA</li>
+                            <li><i class="fas fa-envelope" style="margin-right: 8px;"></i> support@teradownloader.example.com</li>
+                            <li><i class="fas fa-map-marker-alt" style="margin-right: 8px;"></i> Cloud City, Internet</li>
                         </ul>
                     </div>
                 </div>
                 <div class="footer-bottom">
-                    <p>&copy; 2025 TeraBox Downloader. All rights reserved.</p>
+                    <p>© <span id="currentYear"></span> TeraBox Downloader. All rights reserved.</p>
                     <p>This website is not affiliated with Terabox, Flextech Inc., or any of their subsidiaries.</p>
                 </div>
             </div>
         </footer>
     </div>
 
-    <!-- Player Page -->
-    <div id="playerPage" class="player-section">
-        <div class="container">
-            <div class="player-container">
-                <div class="player-header">
-                    <h2>Terabox File Player</h2>
-                </div>
-                <div class="player-body">
-                    <div class="player-info">
-                        <h3 id="fileTitle">Loading file information...</h3>
-                        <p id="fileDetails"></p>
-                    </div>
-                    <div class="player-frame-container">
-                        <iframe
-                            id="teraboxPlayer"
-                            width="100%"
-                            height="500"
-                            frameborder="0"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <a href="#" class="back-button" id="backToHome">Back to Home</a>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- About Us Modal -->
-    <div id="aboutModal" class="modal">
+    <div id="aboutUsModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <span class="modal-close-btn" id="closeAboutModal">×</span>
             <h2>About Us</h2>
-            <p>Welcome to TeraBox Downloader - your go-to tool for downloading files from Terabox without any hassle!</p>
-            <br>
-            <p>We created this tool to simplify the process of downloading files shared through Terabox. Our mission is to provide a seamless file downloading experience without requiring users to create accounts or log in to Terabox.</p>
-            <br>
-            <p>Our team consists of web developers and technology enthusiasts who are passionate about creating useful tools that make digital life easier. We're constantly working to improve our downloader and add new features to enhance your experience.</p>
-            <br>
-            <p>This tool is designed with user privacy and security in mind. We don't store your files or personal information, and all processes happen in your browser.</p>
-            <br>
+            <p>Welcome to TeraBox Downloader - your go-to tool for easily accessing files from Terabox!</p>
+            <p>We created this tool to simplify the process of viewing media shared through Terabox. Our mission is to provide a seamless experience without requiring users to navigate complex interfaces or directly log in to Terabox for basic viewing.</p>
+            <p>Our team is passionate about creating useful web utilities that make digital life easier. We continuously work on improving our tools and adding new features.</p>
+            <p>This tool is designed with user privacy in mind. We don't store your links or personal information. The media playing capability is provided by a third-party service (`player.teraboxfast.com`).</p>
             <p>Thank you for choosing our Terabox Downloader. We hope it serves you well!</p>
         </div>
     </div>
 
     <!-- Contact Us Modal -->
-    <div id="contactModal" class="modal">
+    <div id="contactUsModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
+            <span class="modal-close-btn" id="closeContactModal">×</span>
             <h2>Contact Us</h2>
-            <p>We'd love to hear from you! If you have any questions, suggestions, or feedback, please feel free to reach out to us.</p>
-            <br>
-            <h3>Email</h3>
-            <p>support@teradownloader.com</p>
-            <br>
-            <h3>Social Media</h3>
-            <div class="social-icons">
-                <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+            <p>We'd love to hear from you! If you have any questions, suggestions, or feedback, please feel free to reach out.</p>
+            
+            <h3>Email:</h3>
+            <p>support@teradownloader.example.com (Placeholder)</p>
+            
+            <h3 style="margin-top:20px;">Social Media:</h3>
+            <div class="social-icons" style="margin-bottom:20px;">
+                <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
             </div>
-            <br>
-            <h3>Send Us a Message</h3>
-            <form>
-                <div style="margin-bottom: 15px;">
-                    <label for="name" style="display: block; margin-bottom: 5px;">Name</label>
-                    <input type="text" id="name" name="name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+
+            <h3>Send Us a Message:</h3>
+            <form id="contactForm">
+                <div>
+                    <label for="contact_name" style="display: block; margin-bottom: 5px; font-weight:500;">Name</label>
+                    <input type="text" id="contact_name" name="name" required>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label for="email" style="display: block; margin-bottom: 5px;">Email</label>
-                    <input type="email" id="email" name="email" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                <div>
+                    <label for="contact_email" style="display: block; margin-bottom: 5px; font-weight:500;">Email</label>
+                    <input type="email" id="contact_email" name="email" required>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label for="message" style="display: block; margin-bottom: 5px;">Message</label>
-                    <textarea id="message" name="message" rows="5" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                <div>
+                    <label for="contact_message" style="display: block; margin-bottom: 5px; font-weight:500;">Message</label>
+                    <textarea id="contact_message" name="message" rows="4" required></textarea>
                 </div>
-                <button type="submit" style="padding: 10px 20px; background-color: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer;">Send Message</button>
+                <button type="submit">Send Message</button>
             </form>
         </div>
     </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Menu Functionality ---
-            const menuBtn = document.getElementById('menuBtn');
-            const closeMenuBtn = document.getElementById('closeMenuBtn');
-            const sideMenu = document.getElementById('sideMenu');
-            const navLinks = sideMenu.querySelectorAll('a');
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Hamburger Menu Functionality ---
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navLinksUl = document.getElementById('navLinks'); // Corrected ID from navLinks to navLinksUl for clarity if needed
 
-            menuBtn.addEventListener('click', () => sideMenu.classList.add('open'));
-            closeMenuBtn.addEventListener('click', () => sideMenu.classList.remove('open'));
-            navLinks.forEach(link => {
-                if (!link.id.includes('Link')) { // General check for non-modal links
-                    link.addEventListener('click', () => {
-                        if (link.getAttribute('href').startsWith('#') && document.getElementById(link.getAttribute('href').substring(1))) {
-                           sideMenu.classList.remove('open');
-                           document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
-                        }
-                    });
+        if (hamburgerBtn && navLinksUl) {
+            hamburgerBtn.addEventListener('click', () => {
+                navLinksUl.classList.toggle('show');
+            });
+        }
+        // Close mobile menu when a link inside it is clicked (especially for #faq)
+        navLinksUl.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (navLinksUl.classList.contains('show')) {
+                    if (link.getAttribute('href') && link.getAttribute('href').startsWith('#')) {
+                       navLinksUl.classList.remove('show');
+                       // Smooth scroll handled by browser for #links, or add custom below
+                       // document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                    } else if (link.id === 'aboutUsLink' || link.id === 'contactUsLink') {
+                        // Modals will handle their own display, but close menu
+                        navLinksUl.classList.remove('show');
+                    }
                 }
             });
-            document.addEventListener('click', (event) => {
-                if (sideMenu.classList.contains('open') && !sideMenu.contains(event.target) && event.target !== menuBtn) {
-                    sideMenu.classList.remove('open');
-                }
-            });
+        });
 
-            // --- Modal Functionality ---
-            const aboutUsLink = document.getElementById('aboutUsLink');
-            const contactUsLink = document.getElementById('contactUsLink');
-            const aboutUsModal = document.getElementById('aboutUsModal');
-            const contactUsModal = document.getElementById('contactUsModal');
-            const closeAboutModal = document.getElementById('closeAboutModal');
-            const closeContactModal = document.getElementById('closeContactModal');
 
-            function openModal(modal) { modal.style.display = 'block'; sideMenu.classList.remove('open'); }
-            function closeModal(modal) { modal.style.display = 'none'; }
+        // --- Modal Functionality ---
+        const aboutUsLink = document.getElementById('aboutUsLink');
+        const contactUsLink = document.getElementById('contactUsLink');
+        const footerAboutUsLink = document.getElementById('footerAboutUsLink');
+        const footerContactUsLink = document.getElementById('footerContactUsLink');
 
-            if (aboutUsLink) aboutUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(aboutUsModal); });
-            if (contactUsLink) contactUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(contactUsModal); });
-            if (closeAboutModal) closeAboutModal.addEventListener('click', () => closeModal(aboutUsModal));
-            if (closeContactModal) closeContactModal.addEventListener('click', () => closeModal(contactUsModal));
-            window.addEventListener('click', (event) => {
-                if (event.target === aboutUsModal) closeModal(aboutUsModal);
-                if (event.target === contactUsModal) closeModal(contactUsModal);
-            });
+        const aboutUsModal = document.getElementById('aboutUsModal');
+        const contactUsModal = document.getElementById('contactUsModal');
+        
+        const closeAboutModalBtn = document.getElementById('closeAboutModal');
+        const closeContactModalBtn = document.getElementById('closeContactModal');
 
-            // --- FAQ Accordion ---
-            document.querySelectorAll('.faq-item .faq-question').forEach(question => {
-                question.addEventListener('click', () => {
-                    const answer = question.nextElementSibling;
-                    const toggle = question.querySelector('.faq-toggle');
-                    const isOpen = answer.classList.contains('open');
-
-                    document.querySelectorAll('.faq-answer.open').forEach(openAnswer => {
-                        if (openAnswer !== answer) {
-                            openAnswer.classList.remove('open');
-                            openAnswer.style.maxHeight = null;
-                            // openAnswer.style.padding = "0 15px"; // This might cause jumpiness if only max-height is animated
-                            const prevQuestion = openAnswer.previousElementSibling;
-                            prevQuestion.classList.remove('active');
-                            prevQuestion.querySelector('.faq-toggle').textContent = '+';
-                        }
-                    });
-
-                    answer.classList.toggle('open');
-                    question.classList.toggle('active');
-                    if (answer.classList.contains('open')) {
-                        answer.style.maxHeight = answer.scrollHeight + "px";
-                        toggle.textContent = '-';
-                    } else {
-                        answer.style.maxHeight = null;
-                        toggle.textContent = '+';
-                    }
-                });
-            });
-
-            // --- Content Processor Logic ---
-            const pasteBtn = document.getElementById('pasteBtn');
-            const urlInput = document.getElementById('link');
-            const label = document.querySelector('label[for="link"]');
-            const getVideoBtn = document.getElementById('getVideoBtn');
-            const messageArea = document.getElementById('messageArea');
-
-            // Label animation
-            if (urlInput && label) {
-                urlInput.addEventListener('focus', () => label.classList.add('float'));
-                urlInput.addEventListener('blur', () => {
-                    if (!urlInput.value) {
-                        label.classList.remove('float');
-                    }
-                });
-                // Initialize if pre-filled (e.g. browser back button)
-                if (urlInput.value) {
-                    label.classList.add('float');
-                }
+        function openModal(modal) { 
+            if (modal) {
+                modal.style.display = 'flex'; // Use flex for centering
+                if (navLinksUl.classList.contains('show')) navLinksUl.classList.remove('show'); // Close mobile menu
             }
-            
-            // Paste functionality
-            if (pasteBtn) {
-                pasteBtn.addEventListener('click', () => {
-                    navigator.clipboard.readText().then(text => {
-                        if (urlInput && label) {
-                            urlInput.value = text;
-                            label.classList.add('float');
-                            urlInput.focus();
-                            showMessage('', ''); // Clear previous messages
-                        }
-                    }).catch(err => {
-                        console.error('Failed to read clipboard:', err);
-                        showMessage('Failed to paste from clipboard. Please paste manually.', 'error');
-                    });
-                });
-            }
+        }
+        function closeModal(modal) { 
+            if (modal) modal.style.display = 'none'; 
+        }
 
-            const supportedDomains = [
-                "www.mirrobox.com", "www.nephobox.com", "freeterabox.com", "www.freeterabox.com",
-                "1024tera.com", "4funbox.co", "www.4funbox.com", "mirrobox.com", "nephobox.com",
-                "terabox.app", "terabox.com", "www.terabox.ap", "terabox.fun", 
-                "www.1024tera.co", "www.momerybox.com", "teraboxapp.com", "momerybox.com",
-                "tibibox.com", "www.tibibox.com", "www.teraboxapp.com"
-                // Note: www.terabox.com is listed twice in user spec, one is enough.
-            ];
+        if (aboutUsLink) aboutUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(aboutUsModal); });
+        if (contactUsLink) contactUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(contactUsModal); });
+        if (footerAboutUsLink) footerAboutUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(aboutUsModal); });
+        if (footerContactUsLink) footerContactUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(contactUsModal); });
 
-            function isValidTeraboxUrl(url) {
-                if (!url) return false;
-                try {
-                    const parsedUrl = new URL(url);
-                    let hostname = parsedUrl.hostname;
-                    const isSupportedDomain = supportedDomains.includes(hostname) || supportedDomains.includes(hostname.replace(/^www\./, ''));
-
-                    if (!isSupportedDomain) return false;
-
-                    // Check for common Terabox sharing patterns. The player might expect specific formats.
-                    // The key is that player.teraboxfast.com gets the full original Terabox share URL.
-                    return parsedUrl.pathname.includes('/s/') || 
-                           parsedUrl.search.includes('surl=') ||
-                           parsedUrl.pathname.includes('/share/link'); // Common patterns
-                } catch (e) {
-                    return false; // Invalid URL format
-                }
-            }
-
-            function showMessage(message, type) {
-                if (messageArea) {
-                    messageArea.textContent = message;
-                    messageArea.className = `message-area ${type}`;
-                    messageArea.style.display = message ? 'block' : 'none';
-                }
-            }
-            
-            if (getVideoBtn) {
-                getVideoBtn.addEventListener('click', () => {
-                    const userLink = urlInput.value.trim();
-                    showMessage('', ''); // Clear previous messages
-
-                    if (!userLink) {
-                        showMessage('Please paste a Terabox URL first.', 'error');
-                        return;
-                    }
-
-                    if (isValidTeraboxUrl(userLink)) {
-                        // Ensure the URL is properly encoded to be part of another URL's query string
-                        const encodedUserLink = encodeURIComponent(userLink);
-                        const videoPlayerPage = 'video-player.html'; // Assumes in the same directory
-                        const videoLink = `${videoPlayerPage}?q=${encodedUserLink}`;
-                        
-                        showMessage('Valid link. Redirecting to player...', 'success');
-                        setTimeout(() => {
-                           window.location.href = videoLink;
-                        }, 1000); // Short delay for user to see message
-                    } else {
-                        showMessage('Invalid or unsupported Terabox URL. Please check the link and try again. Ensure it starts with http(s):// and is from a supported domain with a share path (e.g., /s/...).', 'error');
-                    }
-                });
+        if (closeAboutModalBtn) closeAboutModalBtn.addEventListener('click', () => closeModal(aboutUsModal));
+        if (closeContactModalBtn) closeContactModalBtn.addEventListener('click', () => closeModal(contactUsModal));
+        
+        window.addEventListener('click', (event) => {
+            if (event.target === aboutUsModal) closeModal(aboutUsModal);
+            if (event.target === contactUsModal) closeModal(contactUsModal);
+        });
+        window.addEventListener('keydown', (event) => { // Close with Escape key
+            if (event.key === 'Escape') {
+                closeModal(aboutUsModal);
+                closeModal(contactUsModal);
             }
         });
+
+        // Contact form submission (basic example)
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Thank you for your message! (This is a demo)');
+                closeModal(contactUsModal);
+                contactForm.reset();
+            });
+        }
+
+        // --- FAQ Accordion ---
+        document.querySelectorAll('.faq-item .faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling; // .faq-answer
+                const toggle = question.querySelector('.faq-toggle');
+                const parentItem = question.closest('.faq-item'); // Get .faq-item
+
+                const isOpen = answer.classList.contains('open');
+
+                // Close all other open answers
+                document.querySelectorAll('.faq-answer.open').forEach(openAnswer => {
+                    if (openAnswer !== answer) {
+                        openAnswer.classList.remove('open');
+                        openAnswer.style.maxHeight = null;
+                        // openAnswer.style.paddingTop = "0"; // Reset padding if animated
+                        // openAnswer.style.paddingBottom = "0";
+                        const prevQuestion = openAnswer.previousElementSibling;
+                        if (prevQuestion) {
+                             prevQuestion.classList.remove('active');
+                             const prevToggle = prevQuestion.querySelector('.faq-toggle');
+                             if (prevToggle) prevToggle.textContent = '+';
+                        }
+                    }
+                });
+
+                answer.classList.toggle('open');
+                question.classList.toggle('active'); // For styling the question itself
+
+                if (answer.classList.contains('open')) {
+                    answer.style.maxHeight = answer.scrollHeight + "px";
+                    // answer.style.paddingTop = "0"; // Example if you animated padding
+                    // answer.style.paddingBottom = "20px";
+                    if (toggle) toggle.textContent = '-';
+                } else {
+                    answer.style.maxHeight = null;
+                    // answer.style.paddingTop = "0";
+                    // answer.style.paddingBottom = "0";
+                    if (toggle) toggle.textContent = '+';
+                }
+            });
+        });
+
+        // --- Input Field Label Animation & Paste Functionality ---
+        const urlInput = document.getElementById('link');
+        const label = document.querySelector('label[for="link"]'); // Specific label
+        const pasteBtn = document.getElementById('pasteBtn');
+
+        if (urlInput && label) {
+            urlInput.addEventListener('focus', () => label.classList.add('float'));
+            urlInput.addEventListener('blur', () => {
+                if (!urlInput.value) { // Only remove float if empty
+                    label.classList.remove('float');
+                }
+            });
+            // Initialize if pre-filled
+            if (urlInput.value) {
+                label.classList.add('float');
+            }
+        }
+        
+        if (pasteBtn && urlInput) {
+            pasteBtn.addEventListener('click', () => {
+                navigator.clipboard.readText().then(text => {
+                    urlInput.value = text;
+                    if (label) label.classList.add('float'); // Ensure label floats
+                    urlInput.focus();
+                    showMessage('', ''); // Clear previous messages
+                }).catch(err => {
+                    console.error('Failed to read clipboard:', err);
+                    showMessage('Failed to paste from clipboard. Please paste manually.', 'error');
+                });
+            });
+        }
+
+        // --- Content Processor Logic ---
+        const getVideoBtn = document.getElementById('getVideoBtn');
+        const messageArea = document.getElementById('messageArea');
+
+        const supportedDomains = [
+            "www.mirrobox.com", "www.nephobox.com", "freeterabox.com", "www.freeterabox.com",
+            "1024tera.com", "4funbox.co", "www.4funbox.com", "mirrobox.com", "nephobox.com",
+            "terabox.app", "terabox.com", "www.terabox.ap", "terabox.fun", 
+            "www.1024tera.co", "www.momerybox.com", "teraboxapp.com", "momerybox.com",
+            "tibibox.com", "www.tibibox.com", "www.teraboxapp.com"
+        ];
+
+        // Populate supported URLs grid
+        const urlsGrid = document.getElementById('supportedUrlsGrid');
+        if (urlsGrid) {
+            supportedDomains.forEach(domain => {
+                const urlDiv = document.createElement('div');
+                urlDiv.classList.add('url-item');
+                urlDiv.textContent = domain;
+                urlsGrid.appendChild(urlDiv);
+            });
+        }
+
+
+        function isValidTeraboxUrl(url) {
+            if (!url) return false;
+            try {
+                const parsedUrl = new URL(url); // Requires full URL like https://...
+                let hostname = parsedUrl.hostname;
+                
+                // Check if the hostname (or its non-www version) is in our list
+                const isSupportedDomain = supportedDomains.includes(hostname) || 
+                                          (hostname.startsWith('www.') && supportedDomains.includes(hostname.substring(4)));
+
+                if (!isSupportedDomain) return false;
+
+                // Check for common Terabox sharing patterns.
+                // The player (player.teraboxfast.com) will ultimately determine if it can handle the link.
+                // These patterns are just a client-side pre-check.
+                return parsedUrl.pathname.includes('/s/') || 
+                       parsedUrl.search.includes('surl=') ||
+                       parsedUrl.pathname.includes('/share/link') || // Common share path
+                       parsedUrl.pathname.length > 3; // Generic check for short IDs like terabox.app/xxxxxx
+            } catch (e) {
+                 // If URL parsing fails, it's not a valid URL.
+                return false;
+            }
+        }
+
+        function showMessage(message, type) {
+            if (messageArea) {
+                messageArea.textContent = message;
+                messageArea.className = 'message-area'; // Reset classes
+                if (type) {
+                    messageArea.classList.add(type);
+                }
+                messageArea.style.display = message ? 'block' : 'none';
+            }
+        }
+        
+        if (getVideoBtn && urlInput) {
+            getVideoBtn.addEventListener('click', () => {
+                const userLink = urlInput.value.trim();
+                showMessage('', ''); // Clear previous messages
+
+                if (!userLink) {
+                    showMessage('Please paste a Terabox URL first.', 'error');
+                    return;
+                }
+
+                // Prepend https:// if missing, as new URL() requires it.
+                let fullUserLink = userLink;
+                if (!userLink.startsWith('http://') && !userLink.startsWith('https://')) {
+                    fullUserLink = 'https://' + userLink;
+                }
+
+
+                if (isValidTeraboxUrl(fullUserLink)) {
+                    const encodedUserLink = encodeURIComponent(fullUserLink); // Use the full link for encoding
+                    const videoPlayerPage = 'video-player.html'; 
+                    const videoLink = `${videoPlayerPage}?q=${encodedUserLink}`;
+                    
+                    showMessage('Valid link. Redirecting to player...', 'success');
+                    setTimeout(() => {
+                       window.location.href = videoLink;
+                    }, 1000);
+                } else {
+                    showMessage('Invalid or unsupported Terabox URL. Please check the link and try again. Ensure it starts with http(s):// and is from a supported domain with a share path (e.g., /s/...).', 'error');
+                }
+            });
+        }
+
+        // Set current year in footer
+        const currentYearSpan = document.getElementById('currentYear');
+        if (currentYearSpan) {
+            currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+    });
     </script>
 </body>
 </html>
