@@ -946,191 +946,180 @@
             </form>
         </div>
     </div>
-
     <script>
-        // Navigation and UI functionality
-        document.addEventListener("DOMContentLoaded", function() {
-            // Toggle hamburger menu
-            const hamburgerBtn = document.getElementById('hamburgerBtn');
-            const navLinks = document.getElementById('navLinks');
-            
-            if (hamburgerBtn) {
-                hamburgerBtn.addEventListener('click', function() {
-                    navLinks.classList.toggle('show');
-                });
-            }
-            
-            // Input field label animation
-            const urlInput = document.getElementById('link');
-            const label = document.querySelector('label[for="link"]');
-            
-            if (urlInput && label) {
-                urlInput.addEventListener('focus', () => label.classList.add('float'));
-                urlInput.addEventListener('blur', () => !urlInput.value && label.classList.remove('float'));
-                
-                // Initialize if pre-filled
-                if (urlInput.value) label.classList.add('float');
-            }
-            
-            // Accordion functionality for FAQ
-            const accordionItems = document.querySelectorAll('.accordion-item');
-            
-            accordionItems.forEach(item => {
-                const header = item.querySelector('.accordion-header');
-                
-                header.addEventListener('click', () => {
-                    // Close all other items
-                    accordionItems.forEach(otherItem => {
-                        if (otherItem !== item) {
-                            otherItem.classList.remove('active');
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Menu Functionality ---
+            const menuBtn = document.getElementById('menuBtn');
+            const closeMenuBtn = document.getElementById('closeMenuBtn');
+            const sideMenu = document.getElementById('sideMenu');
+            const navLinks = sideMenu.querySelectorAll('a');
+
+            menuBtn.addEventListener('click', () => sideMenu.classList.add('open'));
+            closeMenuBtn.addEventListener('click', () => sideMenu.classList.remove('open'));
+            navLinks.forEach(link => {
+                if (!link.id.includes('Link')) { // General check for non-modal links
+                    link.addEventListener('click', () => {
+                        if (link.getAttribute('href').startsWith('#') && document.getElementById(link.getAttribute('href').substring(1))) {
+                           sideMenu.classList.remove('open');
+                           document.querySelector(link.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
                         }
                     });
-                    
-                    // Toggle current item
-                    item.classList.toggle('active');
-                });
-            });
-            
-            // Modal functionality
-            const aboutBtn = document.querySelectorAll('.about-btn');
-            const contactBtn = document.querySelectorAll('.contact-btn');
-            const aboutModal = document.getElementById('aboutModal');
-            const contactModal = document.getElementById('contactModal');
-            const closeButtons = document.querySelectorAll('.close');
-            
-            // Open About Us modal
-            aboutBtn.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    aboutModal.style.display = 'block';
-                });
-            });
-            
-            // Open Contact Us modal
-            contactBtn.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    contactModal.style.display = 'block';
-                });
-            });
-            
-            // Close modals
-            closeButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    aboutModal.style.display = 'none';
-                    contactModal.style.display = 'none';
-                });
-            });
-            
-            // Close modals when clicking outside
-            window.addEventListener('click', function(event) {
-                if (event.target === aboutModal) {
-                    aboutModal.style.display = 'none';
-                }
-                if (event.target === contactModal) {
-                    contactModal.style.display = 'none';
                 }
             });
+            document.addEventListener('click', (event) => {
+                if (sideMenu.classList.contains('open') && !sideMenu.contains(event.target) && event.target !== menuBtn) {
+                    sideMenu.classList.remove('open');
+                }
+            });
+
+            // --- Modal Functionality ---
+            const aboutUsLink = document.getElementById('aboutUsLink');
+            const contactUsLink = document.getElementById('contactUsLink');
+            const aboutUsModal = document.getElementById('aboutUsModal');
+            const contactUsModal = document.getElementById('contactUsModal');
+            const closeAboutModal = document.getElementById('closeAboutModal');
+            const closeContactModal = document.getElementById('closeContactModal');
+
+            function openModal(modal) { modal.style.display = 'block'; sideMenu.classList.remove('open'); }
+            function closeModal(modal) { modal.style.display = 'none'; }
+
+            if (aboutUsLink) aboutUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(aboutUsModal); });
+            if (contactUsLink) contactUsLink.addEventListener('click', (e) => { e.preventDefault(); openModal(contactUsModal); });
+            if (closeAboutModal) closeAboutModal.addEventListener('click', () => closeModal(aboutUsModal));
+            if (closeContactModal) closeContactModal.addEventListener('click', () => closeModal(contactUsModal));
+            window.addEventListener('click', (event) => {
+                if (event.target === aboutUsModal) closeModal(aboutUsModal);
+                if (event.target === contactUsModal) closeModal(contactUsModal);
+            });
+
+            // --- FAQ Accordion ---
+            document.querySelectorAll('.faq-item .faq-question').forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const toggle = question.querySelector('.faq-toggle');
+                    const isOpen = answer.classList.contains('open');
+
+                    document.querySelectorAll('.faq-answer.open').forEach(openAnswer => {
+                        if (openAnswer !== answer) {
+                            openAnswer.classList.remove('open');
+                            openAnswer.style.maxHeight = null;
+                            // openAnswer.style.padding = "0 15px"; // This might cause jumpiness if only max-height is animated
+                            const prevQuestion = openAnswer.previousElementSibling;
+                            prevQuestion.classList.remove('active');
+                            prevQuestion.querySelector('.faq-toggle').textContent = '+';
+                        }
+                    });
+
+                    answer.classList.toggle('open');
+                    question.classList.toggle('active');
+                    if (answer.classList.contains('open')) {
+                        answer.style.maxHeight = answer.scrollHeight + "px";
+                        toggle.textContent = '-';
+                    } else {
+                        answer.style.maxHeight = null;
+                        toggle.textContent = '+';
+                    }
+                });
+            });
+
+            // --- Content Processor Logic ---
+            const pasteBtn = document.getElementById('pasteBtn');
+            const urlInput = document.getElementById('link');
+            const label = document.querySelector('label[for="link"]');
+            const getVideoBtn = document.getElementById('getVideoBtn');
+            const messageArea = document.getElementById('messageArea');
+
+            // Label animation
+            if (urlInput && label) {
+                urlInput.addEventListener('focus', () => label.classList.add('float'));
+                urlInput.addEventListener('blur', () => {
+                    if (!urlInput.value) {
+                        label.classList.remove('float');
+                    }
+                });
+                // Initialize if pre-filled (e.g. browser back button)
+                if (urlInput.value) {
+                    label.classList.add('float');
+                }
+            }
             
             // Paste functionality
-            const pasteBtn = document.querySelector('.paste-btn');
-            
-            if (pasteBtn && urlInput) {
+            if (pasteBtn) {
                 pasteBtn.addEventListener('click', () => {
-                    navigator.clipboard.readText()
-                        .then(text => {
+                    navigator.clipboard.readText().then(text => {
+                        if (urlInput && label) {
                             urlInput.value = text;
                             label.classList.add('float');
                             urlInput.focus();
-                        })
-                        .catch(err => console.error('Failed to read clipboard:', err));
+                            showMessage('', ''); // Clear previous messages
+                        }
+                    }).catch(err => {
+                        console.error('Failed to read clipboard:', err);
+                        showMessage('Failed to paste from clipboard. Please paste manually.', 'error');
+                    });
                 });
             }
-            
-            // Check if we're on the player page or main page based on URL
-            const qParam = new URLSearchParams(window.location.search).get('q');
-            const mainPage = document.getElementById('mainPage');
-            const playerPage = document.getElementById('playerPage');
-            const teraboxPlayer = document.getElementById('teraboxPlayer');
-            const fileTitle = document.getElementById('fileTitle');
-            const fileDetails = document.getElementById('fileDetails');
-            const backToHome = document.getElementById('backToHome');
-            
-            if (qParam) {
-                // Show player page, hide main page
-                mainPage.style.display = 'none';
-                playerPage.style.display = 'block';
-                
-                // Set the iframe src
-                teraboxPlayer.src = 'https://player.teraboxfast.com/terabox?q=' + encodeURIComponent(qParam);
-                
-                // Update file info (this would typically come from an API, but we'll simulate it)
-                const fileName = qParam.split('/').pop().replace(/\?.*$/, '');
-                fileTitle.textContent = fileName || 'Terabox File';
-                fileDetails.textContent = 'Loading file from Terabox...';
-                
-                // Back button functionality
-                if (backToHome) {
-                    backToHome.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        window.location.href = window.location.pathname; // Remove query params
-                    });
+
+            const supportedDomains = [
+                "www.mirrobox.com", "www.nephobox.com", "freeterabox.com", "www.freeterabox.com",
+                "1024tera.com", "4funbox.co", "www.4funbox.com", "mirrobox.com", "nephobox.com",
+                "terabox.app", "terabox.com", "www.terabox.ap", "terabox.fun", 
+                "www.1024tera.co", "www.momerybox.com", "teraboxapp.com", "momerybox.com",
+                "tibibox.com", "www.tibibox.com", "www.teraboxapp.com"
+                // Note: www.terabox.com is listed twice in user spec, one is enough.
+            ];
+
+            function isValidTeraboxUrl(url) {
+                if (!url) return false;
+                try {
+                    const parsedUrl = new URL(url);
+                    let hostname = parsedUrl.hostname;
+                    const isSupportedDomain = supportedDomains.includes(hostname) || supportedDomains.includes(hostname.replace(/^www\./, ''));
+
+                    if (!isSupportedDomain) return false;
+
+                    // Check for common Terabox sharing patterns. The player might expect specific formats.
+                    // The key is that player.teraboxfast.com gets the full original Terabox share URL.
+                    return parsedUrl.pathname.includes('/s/') || 
+                           parsedUrl.search.includes('surl=') ||
+                           parsedUrl.pathname.includes('/share/link'); // Common patterns
+                } catch (e) {
+                    return false; // Invalid URL format
                 }
-            } else {
-                // We're on the main page
-                mainPage.style.display = 'block';
-                playerPage.style.display = 'none';
-                
-                // Function to check if the URL is a valid Terabox link
-                function isValidTeraboxUrl(url) {
-                    const patterns = [
-                        /\/s\/(.+?)(?:\?|$)/,
-                        /surl=([^&]+)/
-                    ];
-                    
-                    // List of valid Terabox domains
-                    const validDomains = [
-                        'mirrobox.com', 'www.mirrobox.com',
-                        'nephobox.com', 'www.nephobox.com',
-                        'freeterabox.com', 'www.freeterabox.com',
-                        '1024tera.com', 'www.1024tera.co',
-                        '4funbox.co', 'www.4funbox.com',
-                        'terabox.app', 'terabox.com',
-                        'www.terabox.ap', 'terabox.fun',
-                        'www.terabox.com', 'www.momerybox.com',
-                        'teraboxapp.com', 'www.teraboxapp.com',
-                        'momerybox.com', 'tibibox.com', 'www.tibibox.com'
-                    ];
-                    
-                    try {
-                        const urlObj = new URL(url);
-                        const hostname = urlObj.hostname;
-                        
-                        if (!validDomains.some(domain => hostname.includes(domain))) {
-                            return false;
-                        }
-                        
-                        return patterns.some(pattern => pattern.test(url));
-                    } catch (e) {
-                        return false;
+            }
+
+            function showMessage(message, type) {
+                if (messageArea) {
+                    messageArea.textContent = message;
+                    messageArea.className = `message-area ${type}`;
+                    messageArea.style.display = message ? 'block' : 'none';
+                }
+            }
+            
+            if (getVideoBtn) {
+                getVideoBtn.addEventListener('click', () => {
+                    const userLink = urlInput.value.trim();
+                    showMessage('', ''); // Clear previous messages
+
+                    if (!userLink) {
+                        showMessage('Please paste a Terabox URL first.', 'error');
+                        return;
                     }
-                }
-                
-                // Download button functionality
-                const getVideoBtn = document.querySelector('.buttonTera');
-                
-                if (getVideoBtn && urlInput) {
-                    getVideoBtn.addEventListener('click', () => {
-                        const userLink = urlInput.value.trim();
+
+                    if (isValidTeraboxUrl(userLink)) {
+                        // Ensure the URL is properly encoded to be part of another URL's query string
+                        const encodedUserLink = encodeURIComponent(userLink);
+                        const videoPlayerPage = 'video-player.html'; // Assumes in the same directory
+                        const videoLink = `${videoPlayerPage}?q=${encodedUserLink}`;
                         
-                        if (isValidTeraboxUrl(userLink)) {
-                            const videoLink = `${window.location.pathname}?q=${encodeURIComponent(userLink)}`;
-                            window.location.href = videoLink; // Redirect to the player page
-                        } else {
-                            alert("Please enter a valid Terabox URL.");
-                        }
-                    });
-                }
+                        showMessage('Valid link. Redirecting to player...', 'success');
+                        setTimeout(() => {
+                           window.location.href = videoLink;
+                        }, 1000); // Short delay for user to see message
+                    } else {
+                        showMessage('Invalid or unsupported Terabox URL. Please check the link and try again. Ensure it starts with http(s):// and is from a supported domain with a share path (e.g., /s/...).', 'error');
+                    }
+                });
             }
         });
     </script>
