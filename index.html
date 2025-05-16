@@ -72,7 +72,7 @@
         .faq-question.active { color: var(--primary); }
         .faq-toggle { font-size: 1.1rem; font-weight: bold; }
         .faq-answer { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out; color: #555; font-size:0.95em;}
-        .faq-answer.open { padding-bottom: 15px; } /* padding-top handled by transition */
+        .faq-answer.open { padding-bottom: 15px; }
         footer { background-color: var(--bg-dark); color: white; padding: 40px 0 15px; }
         .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-bottom: 25px; text-align:left;}
         .footer-section h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; }
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiUrl = `${teraboxWorkerApiBase}/get-info?shorturl=${encodeURIComponent(shorturl)}&pwd=${encodeURIComponent(pwd)}`;
 
         try {
-            console.log("Client: Fetching from Worker URL:", apiUrl);
+            console.log("Client: Fetching from Worker URL (get-info):", apiUrl);
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json, text/plain, */*' }
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const responseText = await response.text();
 
             if (!response.ok) {
-                console.error(`Worker responded with Error (get-info, status ${response.status}):`, responseText);
+                console.error(`Client: Worker responded with Error (get-info, status ${response.status}). Raw Text from Worker:`, responseText);
                 let detail = responseText.substring(0, 300).replace(/</g, "<");
                 showDirectLinkMessage(`Error from Proxy Worker ('get-info', Status: ${response.status}). <br>Worker Response: ${detail}...`, 'error', true);
                 return null;
@@ -383,18 +383,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     showDirectLinkMessage('Info received via Worker. Processing files...', 'success');
                     return data;
                 } else {
-                    showDirectLinkMessage(`Worker reported 'get-info' not OK or empty list: ${data.message || 'Unknown reason'}.`, 'warning');
+                    showDirectLinkMessage(`Worker reported 'get-info' not OK or empty list: ${data.message || 'Unknown reason from Worker response'}.`, 'warning');
                     return null;
                 }
             } catch (jsonError) {
-                console.error('JSON Parsing Error (get-info from Worker):', jsonError, "\nRaw Text from Worker:", responseText);
+                console.error('Client: JSON Parsing Error (get-info from Worker):', jsonError, "\nRaw Text from Worker:", responseText);
                 let detail = responseText.substring(0, 300).replace(/</g, "<");
                 showDirectLinkMessage(`Error: Failed to parse Worker 'get-info' response. Worker might have returned HTML or an error. <br><b>${jsonError.message}</b>. <br>Worker Snippet: ${detail}...`, 'error', true);
                 return null;
             }
         } catch (error) { // Catches network errors for the fetch to the worker itself
-            console.error('Client: Network error fetching from Worker (get-info):', error);
-            showDirectLinkMessage(`Network error connecting to Proxy Worker: ${error.message}. Check Worker availability & logs.`, 'error');
+            console.error('Client: Network error fetching from Worker (get-info):', error.message, error.stack);
+            showDirectLinkMessage(`Network error connecting to Proxy Worker for 'get-info': ${error.message}. Check Worker availability & logs.`, 'error');
             return null;
         }
     }
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = { shareid: String(shareid), uk: String(uk), sign: String(sign), timestamp: String(timestamp), fs_id: String(fs_id) };
 
         try {
-            console.log("Client: POSTing to Worker URL:", apiUrl, "Payload:", payload);
+            console.log("Client: POSTing to Worker URL (get-download):", apiUrl, "Payload:", payload);
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*' },
@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                console.error(`Worker responded with Error (get-download, status ${response.status}) for ${filename}:`, responseText);
+                console.error(`Client: Worker responded with Error (get-download, status ${response.status}) for ${filename}. Raw Text from Worker:`, responseText);
                 let detail = responseText.substring(0, 200).replace(/</g, "<");
                 showDirectLinkMessage(`Error for ${filename}: Proxy Worker ('get-download', Status: ${response.status}). <br>Worker Response: ${detail}...`, 'error', true);
                 return null;
@@ -427,17 +427,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.ok && data.downloadLink) {
                     return data.downloadLink;
                 } else {
-                    showDirectLinkMessage(`Failed for ${filename}: Worker 'get-download' reported: ${data.message || 'No link/Not OK'}.`, 'warning');
+                    showDirectLinkMessage(`Failed for ${filename}: Worker 'get-download' reported: ${data.message || 'No link/Not OK from Worker response'}.`, 'warning');
                     return null;
                 }
             } catch (jsonError) {
-                console.error('JSON Parsing Error (get-download from Worker):', jsonError, "\nRaw Text for " + filename + " from Worker:", responseText);
+                console.error('Client: JSON Parsing Error (get-download from Worker):', jsonError, "\nRaw Text for " + filename + " from Worker:", responseText);
                 let detail = responseText.substring(0, 200).replace(/</g, "<");
                 showDirectLinkMessage(`Failed for ${filename}: Couldn't parse Worker 'get-download' JSON. <br><b>${jsonError.message}</b>. <br>Worker Snippet: ${detail}...`, 'error', true);
                 return null;
             }
         } catch (error) { // Catches network errors for the fetch to the worker itself
-            console.error('Client: Network error fetching from Worker (get-download) for ' + filename + ':', error);
+            console.error('Client: Network error fetching from Worker (get-download) for ' + filename + ':', error.message, error.stack);
             directLinkResultsArea.querySelectorAll('.message-area.info').forEach(msg => {
                 if (msg.textContent.includes(`Fetching download link for: ${filename.substring(0,30)}`)) msg.remove();
             });
@@ -461,15 +461,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let shorturl = '';
             try {
-                const currentUrl = new URL(fullUserLink); // Use URL constructor for robust parsing
+                const currentUrl = new URL(fullUserLink);
                 const path = currentUrl.pathname;
                 const searchParams = currentUrl.searchParams;
                 
                 if (searchParams.has('surl')) {
                     shorturl = searchParams.get('surl');
                 } else {
-                    // Regex for typical Terabox share IDs like /s/xxxx or just /xxxx (if it's a short ID)
-                    // It looks for a segment after /s/ or a segment that looks like a share ID
                     const pathMatch = path.match(/\/(?:s\/)?([a-zA-Z0-9_-]{8,})/); 
                     if (pathMatch && pathMatch[1]) {
                         shorturl = pathMatch[1];
