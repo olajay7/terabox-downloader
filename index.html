@@ -144,7 +144,7 @@
                 <h2 class="section-title">Features</h2>
                 <div class="features-grid">
                     <div class="feature"><i class="fas fa-play-circle feature-icon"></i><h3>Stream Content</h3><p>Redirects to a player page for streaming (uses player.teraboxfast.com).</p></div>
-                    <div class="feature"><i class="fas fa-download feature-icon"></i><h3>Direct Links</h3><p>Tries to fetch direct download links via a third-party API. Success may vary.</p></div>
+                    <div class="feature"><i class="fas fa-download feature-icon"></i><h3>Direct Links</h3><p>Tries to fetch direct download links via a Cloudflare Worker proxy to a third-party API. Success may vary.</p></div>
                     <div class="feature"><i class="fas fa-user-slash feature-icon"></i><h3>No Login Needed</h3><p>Access files without a Terabox account via this tool.</p></div>
                 </div>
             </div>
@@ -179,11 +179,11 @@
                     </div>
                     <div class="faq-item">
                         <div class="faq-question"><span>Why "Get Direct Link(s)" might fail?</span><span class="faq-toggle">+</span></div>
-                        <div class="faq-answer"><p>Invalid link, API issues (terabox.hnn.workers.dev down/changed), or browser security (CORS) blocking requests, often due to Cloudflare challenges. Check browser console (F12) for detailed errors.</p></div>
+                        <div class="faq-answer"><p>Invalid link, issues with the backend API (terabox.hnn.workers.dev), or issues with the Cloudflare Worker proxy. The target API might be down, changed, or heavily protected by Cloudflare itself. Check browser console (F12) and Worker logs for detailed errors.</p></div>
                     </div>
                      <div class="faq-item">
                         <div class="faq-question"><span>Is it safe and legal?</span><span class="faq-toggle">+</span></div>
-                        <div class="faq-answer"><p>This site doesn't store links. It uses third-party services. You are responsible for respecting Terabox's ToS and copyright laws. Do not download copyrighted material without permission.</p></div>
+                        <div class="faq-answer"><p>This site doesn't store links. It uses a Cloudflare Worker proxy to communicate with third-party services. You are responsible for respecting Terabox's ToS and copyright laws. Do not download copyrighted material without permission.</p></div>
                     </div>
                 </div>
             </div>
@@ -204,8 +204,8 @@
         <div class="modal-content">
             <span class="modal-close-btn" id="closeAboutModal">×</span>
             <h2>About TeraFetch</h2>
-            <p>TeraFetch is a utility to help access Terabox links for streaming or attempting to get direct download links using publicly available third-party APIs.</p>
-            <p>Streaming uses: <strong>player.teraboxfast.com</strong><br>Direct links attempt via: <strong>terabox.hnn.workers.dev</strong> (via a CORS proxy).</p>
+            <p>TeraFetch is a utility to help access Terabox links for streaming or attempting to get direct download links.</p>
+            <p>Streaming uses: <strong>player.teraboxfast.com</strong><br>Direct links attempt via a Cloudflare Worker proxy to: <strong>terabox.hnn.workers.dev</strong>.</p>
             <p><strong>Disclaimer:</strong> This tool is for personal, convenient access. The reliability of external services is not guaranteed. Users must adhere to Terabox's Terms of Service and all applicable copyright laws. This tool does not endorse or facilitate copyright infringement.</p>
         </div>
     </div>
@@ -354,86 +354,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Direct Download Link Logic ---
     const getDirectLinkBtn = document.getElementById('getDirectLinkBtn');
-    const teraboxHnnApiBase = 'https://terabox.hnn.workers.dev/api';
-    // Using cors.proxy.is as it seems to work for some simple cases.
-    // Other options: 'https://api.allorigins.win/raw?url=' (needs encodeURIComponent for target)
-    // 'https://thingproxy.freeboard.io/fetch/' (target URL directly)
-    const corsProxy = 'https://cors.proxy.is/'; 
-
-    async function fetchWithCorsProxy(url, options = {}) {
-        let proxiedUrl = corsProxy + url; // Format for cors.proxy.is
-        console.log(`Fetching via proxy: ${proxiedUrl}`);
-        try {
-            return await fetch(proxiedUrl, options);
-        } catch (proxyError) {
-            console.error("Fetch via proxy failed:", proxyError);
-            showDirectLinkMessage(`Network error while using proxy: ${proxyError.message}. The proxy might be down or blocking the request.`, 'error', true);
-            throw proxyError;
-        }
-    }
+    // *** YOUR CLOUDFLARE WORKER URL IS HERE ***
+    const teraboxWorkerApiBase = 'https://terabox-api-proxy.olalusijay7.workers.dev';
+    // The Worker code expects paths like /get-info, /get-download directly after its base URL.
 
     async function fetchTeraboxInfo(shorturl, pwd = '') {
         clearDirectLinkMessages();
-        showDirectLinkMessage(`Fetching info for ID: ${shorturl}...`, 'info');
-        const apiUrl = `${teraboxHnnApiBase}/get-info?shorturl=${encodeURIComponent(shorturl)}&pwd=${encodeURIComponent(pwd)}`;
+        showDirectLinkMessage(`Fetching info for ID: ${shorturl} via Worker...`, 'info');
+        const apiUrl = `${teraboxWorkerApiBase}/get-info?shorturl=${encodeURIComponent(shorturl)}&pwd=${encodeURIComponent(pwd)}`;
 
         try {
-            const response = await fetchWithCorsProxy(apiUrl, {
-                method: 'GET', headers: { 'Accept': 'application/json, text/plain, */*' }
+            console.log("Client: Fetching from Worker URL:", apiUrl);
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json, text/plain, */*' }
             });
             const responseText = await response.text();
 
             if (!response.ok) {
-                console.error(`API Error (get-info, status ${response.status}):`, responseText);
+                console.error(`Worker responded with Error (get-info, status ${response.status}):`, responseText);
                 let detail = responseText.substring(0, 300).replace(/</g, "<");
-                showDirectLinkMessage(`API 'get-info' request failed (Status: ${response.status}). Often due to Cloudflare on API/proxy. <br>Response snippet: ${detail}...`, 'error', true);
+                showDirectLinkMessage(`Error from Proxy Worker ('get-info', Status: ${response.status}). <br>Worker Response: ${detail}...`, 'error', true);
                 return null;
             }
             try {
                 const data = JSON.parse(responseText);
                 if (data.ok && data.list && data.list.length > 0) {
-                    showDirectLinkMessage('Info received. Processing files...', 'success');
+                    showDirectLinkMessage('Info received via Worker. Processing files...', 'success');
                     return data;
                 } else {
-                    showDirectLinkMessage(`API 'get-info' reported not OK or empty list: ${data.message || 'Unknown reason'}.`, 'warning');
+                    showDirectLinkMessage(`Worker reported 'get-info' not OK or empty list: ${data.message || 'Unknown reason'}.`, 'warning');
                     return null;
                 }
             } catch (jsonError) {
-                console.error('JSON Parsing Error (get-info):', jsonError, "\nRaw Text:", responseText);
+                console.error('JSON Parsing Error (get-info from Worker):', jsonError, "\nRaw Text from Worker:", responseText);
                 let detail = responseText.substring(0, 300).replace(/</g, "<");
-                showDirectLinkMessage(`Error: Failed to parse 'get-info' response as JSON. The API/proxy likely returned HTML (e.g., Cloudflare page). <br><b>${jsonError.message}</b>. <br>Snippet: ${detail}...`, 'error', true);
+                showDirectLinkMessage(`Error: Failed to parse Worker 'get-info' response. Worker might have returned HTML or an error. <br><b>${jsonError.message}</b>. <br>Worker Snippet: ${detail}...`, 'error', true);
                 return null;
             }
-        } catch (error) { // Catches errors from fetchWithCorsProxy or unhandled promise rejections
-            console.error('Critical error in fetchTeraboxInfo:', error);
-            if (!directLinkResultsArea.innerHTML.includes("Failed to parse") && !directLinkResultsArea.innerHTML.includes("API 'get-info' request failed")) {
-                showDirectLinkMessage(`General error fetching info: ${error.message}.`, 'error');
-            }
+        } catch (error) { // Catches network errors for the fetch to the worker itself
+            console.error('Client: Network error fetching from Worker (get-info):', error);
+            showDirectLinkMessage(`Network error connecting to Proxy Worker: ${error.message}. Check Worker availability & logs.`, 'error');
             return null;
         }
     }
 
     async function fetchTeraboxDownloadLink(shareid, uk, sign, timestamp, fs_id, filename) {
-        showDirectLinkMessage(`Fetching download link for: ${filename.substring(0,30)}...`, 'info');
-        const apiUrl = `${teraboxHnnApiBase}/get-download`;
+        showDirectLinkMessage(`Fetching download link for: ${filename.substring(0,30)} via Worker...`, 'info');
+        const apiUrl = `${teraboxWorkerApiBase}/get-download`;
         const payload = { shareid: String(shareid), uk: String(uk), sign: String(sign), timestamp: String(timestamp), fs_id: String(fs_id) };
 
         try {
-            const response = await fetchWithCorsProxy(apiUrl, {
+            console.log("Client: POSTing to Worker URL:", apiUrl, "Payload:", payload);
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*' },
                 body: JSON.stringify(payload)
             });
             const responseText = await response.text();
-             // Remove the "Fetching download link for..." message for this specific file
             directLinkResultsArea.querySelectorAll('.message-area.info').forEach(msg => {
                 if (msg.textContent.includes(`Fetching download link for: ${filename.substring(0,30)}`)) msg.remove();
             });
 
             if (!response.ok) {
-                console.error(`API Error (get-download, status ${response.status}) for ${filename}:`, responseText);
+                console.error(`Worker responded with Error (get-download, status ${response.status}) for ${filename}:`, responseText);
                 let detail = responseText.substring(0, 200).replace(/</g, "<");
-                showDirectLinkMessage(`Failed for ${filename}: API 'get-download' (Status: ${response.status}). Snippet: ${detail}...`, 'error', true);
+                showDirectLinkMessage(`Error for ${filename}: Proxy Worker ('get-download', Status: ${response.status}). <br>Worker Response: ${detail}...`, 'error', true);
                 return null;
             }
             try {
@@ -441,23 +427,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.ok && data.downloadLink) {
                     return data.downloadLink;
                 } else {
-                    showDirectLinkMessage(`Failed for ${filename}: API 'get-download' reported: ${data.message || 'No link/Not OK'}.`, 'warning');
+                    showDirectLinkMessage(`Failed for ${filename}: Worker 'get-download' reported: ${data.message || 'No link/Not OK'}.`, 'warning');
                     return null;
                 }
             } catch (jsonError) {
-                console.error('JSON Parsing Error (get-download):', jsonError, "\nRaw Text for " + filename + ":", responseText);
+                console.error('JSON Parsing Error (get-download from Worker):', jsonError, "\nRaw Text for " + filename + " from Worker:", responseText);
                 let detail = responseText.substring(0, 200).replace(/</g, "<");
-                showDirectLinkMessage(`Failed for ${filename}: Couldn't parse 'get-download' JSON. API/proxy likely sent HTML. <br><b>${jsonError.message}</b>. <br>Snippet: ${detail}...`, 'error', true);
+                showDirectLinkMessage(`Failed for ${filename}: Couldn't parse Worker 'get-download' JSON. <br><b>${jsonError.message}</b>. <br>Worker Snippet: ${detail}...`, 'error', true);
                 return null;
             }
-        } catch (error) {
-            console.error('Critical error in fetchTeraboxDownloadLink for ' + filename + ':', error);
-             directLinkResultsArea.querySelectorAll('.message-area.info').forEach(msg => { // Clean up its "fetching" message
+        } catch (error) { // Catches network errors for the fetch to the worker itself
+            console.error('Client: Network error fetching from Worker (get-download) for ' + filename + ':', error);
+            directLinkResultsArea.querySelectorAll('.message-area.info').forEach(msg => {
                 if (msg.textContent.includes(`Fetching download link for: ${filename.substring(0,30)}`)) msg.remove();
             });
-            if (!directLinkResultsArea.innerHTML.includes("Couldn't parse 'get-download' JSON")) {
-                 showDirectLinkMessage(`General error for ${filename} download link: ${error.message}.`, 'error');
-            }
+            showDirectLinkMessage(`Network error for ${filename} download link via Worker: ${error.message}.`, 'error');
             return null;
         }
     }
@@ -477,14 +461,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let shorturl = '';
             try {
-                const path = new URL(fullUserLink).pathname;
-                const search = new URL(fullUserLink).search;
-                const surlMatch = search.match(/surl=([^&]+)/);
-
-                if (surlMatch && surlMatch[1]) {
-                    shorturl = surlMatch[1];
+                const currentUrl = new URL(fullUserLink); // Use URL constructor for robust parsing
+                const path = currentUrl.pathname;
+                const searchParams = currentUrl.searchParams;
+                
+                if (searchParams.has('surl')) {
+                    shorturl = searchParams.get('surl');
                 } else {
-                    const pathMatch = path.match(/\/(?:s\/)?([a-zA-Z0-9_-]{8,})/); // Common Terabox ID patterns
+                    // Regex for typical Terabox share IDs like /s/xxxx or just /xxxx (if it's a short ID)
+                    // It looks for a segment after /s/ or a segment that looks like a share ID
+                    const pathMatch = path.match(/\/(?:s\/)?([a-zA-Z0-9_-]{8,})/); 
                     if (pathMatch && pathMatch[1]) {
                         shorturl = pathMatch[1];
                     }
@@ -494,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (!shorturl) {
-                 showMessageGlobal('Could not extract a valid share ID (shorturl) from the link. Check format (e.g., /s/xxxx or surl=xxxx).', 'error');
+                 showMessageGlobal('Could not extract a valid share ID (shorturl) from the link. Check format (e.g., /s/xxxx or ?surl=xxxx).', 'error');
                  return;
             }
 
@@ -506,13 +492,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (fileInfo && fileInfo.list) {
                 let linksHTML = '<ul>';
                 let linksFoundCount = 0;
-                directLinkResultsArea.querySelectorAll('.message-area.success').forEach(msg => { // Clean up "Info received..."
+                directLinkResultsArea.querySelectorAll('.message-area.success').forEach(msg => {
                     if (msg.textContent.includes("Info received")) msg.remove();
                 });
 
                 for (const item of fileInfo.list) {
-                    if (item.is_dir === "1" || item.is_dir === 1) { // Skip directories for now
-                        linksHTML += `<li><strong>${item.filename} (Folder - links not generated)</strong></li>`;
+                    if (item.is_dir === "1" || item.is_dir === 1) {
+                        linksHTML += `<li><strong>${item.filename} (Folder - direct links for folders not supported by this API)</strong></li>`;
                         continue;
                     }
                     const downloadLink = await fetchTeraboxDownloadLink(fileInfo.shareid, fileInfo.uk, fileInfo.sign, fileInfo.timestamp, item.fs_id, item.filename);
@@ -531,8 +517,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (linksFoundCount > 0) {
                     directLinkResultsArea.insertAdjacentHTML('beforeend', linksHTML);
-                } else if (!directLinkResultsArea.innerHTML.includes("error")) { // Don't show this if errors already present
-                     showDirectLinkMessage('No downloadable file links were generated from this Terabox link.', 'warning');
+                } else if (!directLinkResultsArea.innerHTML.includes("error") && !directLinkResultsArea.innerHTML.includes("warning")) {
+                     showDirectLinkMessage('No downloadable file links were generated from this Terabox link, or all attempts failed.', 'warning');
                 }
             }
             getDirectLinkBtn.disabled = false;
