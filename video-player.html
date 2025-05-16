@@ -27,7 +27,7 @@
         }
         .player-wrapper {
             width: 100%;
-            max-width: 1000px; /* Max width for the player */
+            max-width: 1000px;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.15);
@@ -39,37 +39,16 @@
             padding: 15px 20px;
             text-align: center;
         }
-        .player-header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        .player-content {
-            padding: 20px;
-        }
-        .file-info {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .file-info h2 {
-            font-size: 1.2rem;
-            color: var(--text);
-            margin-top: 0;
-            margin-bottom: 5px;
-        }
-        .file-info p {
-            font-size: 0.9rem;
-            color: #555;
-            margin: 0;
-            word-break: break-all;
-        }
+        .player-header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+        .player-content { padding: 20px; }
+        .file-info { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
+        .file-info h2 { font-size: 1.2rem; color: var(--text); margin-top: 0; margin-bottom: 5px; }
+        .file-info p { font-size: 0.9rem; color: #555; margin: 0; word-break: break-all; }
         .iframe-container {
             position: relative;
             width: 100%;
-            /* Aspect ratio for video player, e.g., 16:9 */
-            padding-top: 56.25%; /* (9 / 16 * 100) */
-            background-color: #000; /* Black background for player */
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background-color: #000;
             border-radius: 5px;
             overflow: hidden;
         }
@@ -81,10 +60,7 @@
             height: 100%;
             border: none;
         }
-        .controls {
-            margin-top: 25px;
-            text-align: center;
-        }
+        .controls { margin-top: 25px; text-align: center; }
         .back-button {
             display: inline-block;
             padding: 12px 25px;
@@ -97,15 +73,8 @@
             border: none;
             cursor: pointer;
         }
-        .back-button:hover {
-            background-color: var(--secondary);
-        }
-        .loading-message {
-            text-align: center;
-            font-size: 1.1rem;
-            color: var(--primary);
-            padding: 30px;
-        }
+        .back-button:hover { background-color: var(--secondary); }
+        .loading-message { text-align: center; font-size: 1.1rem; color: var(--primary); padding: 30px; }
     </style>
 </head>
 <body>
@@ -121,7 +90,7 @@
             </div>
 
             <div id="playerContainer" class="iframe-container" style="display: none;">
-                <iframe id="teraboxPlayer" allowfullscreen></iframe>
+                <iframe id="teraboxPlayer" allowfullscreen sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-presentation"></iframe>
             </div>
             <p id="loadingMessage" class="loading-message">Loading player...</p>
             
@@ -147,37 +116,35 @@
 
                 try {
                     const urlObj = new URL(decodedQParam);
-                    // Attempt to get a file name from the last part of the path
                     let namePart = urlObj.pathname.substring(urlObj.pathname.lastIndexOf('/') + 1);
-                    if (!namePart && urlObj.searchParams.has('surl')) { // for surl= type links
+                    if (!namePart && urlObj.searchParams.has('surl')) {
                         namePart = urlObj.searchParams.get('surl');
                     }
-                    fileNameDisplay.textContent = `Name: ${namePart || 'File (Name not automatically extractable)'}`;
+                    fileNameDisplay.textContent = `Name: ${namePart || 'File (Name not auto-extractable)'}`;
                 } catch (e) {
                     fileNameDisplay.textContent = 'Name: (Could not parse file name from URL)';
                 }
 
-                iframe.src = 'https://player.teraboxfast.com/terabox?q=' + encodeURIComponent(decodedQParam); // Use original qParam for the player
+                // The player.teraboxfast.com expects the Terabox link directly in 'q'
+                iframe.src = 'https://player.teraboxfast.com/terabox?q=' + encodeURIComponent(decodedQParam);
                 
                 iframe.onload = () => {
                     loadingMessage.style.display = 'none';
                     playerContainer.style.display = 'block';
                 };
                 iframe.onerror = () => {
-                    loadingMessage.textContent = 'Error loading player. The link might be invalid or the player service is unavailable.';
+                    loadingMessage.textContent = 'Error loading player. The link might be invalid, the player service is unavailable, or it might be blocked by your browser/extensions.';
+                     playerContainer.style.display = 'none';
                 }
-
             } else {
                 loadingMessage.textContent = 'No Terabox link provided. Please go back and enter a link.';
-                console.warn('Missing "q" parameter in URL.');
+                playerContainer.style.display = 'none';
             }
 
             if (backButton) {
                 backButton.addEventListener('click', () => {
-                    // Go back to the main page (index.html in the same directory)
-                    // This assumes index.html is the main page.
-                    // If your main page has a different name or path, adjust this.
-                    window.location.href = './'; // Or specific path like 'index.html'
+                    // Correctly navigates to index.html in the same directory
+                    window.location.href = './index.html'; 
                 });
             }
         });
